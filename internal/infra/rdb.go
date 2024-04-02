@@ -1,9 +1,9 @@
 package infra
 
 import (
+	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 	"sapphire-server/internal/conf"
 )
 
@@ -18,22 +18,14 @@ func InitDB() error {
 		return err
 	}
 	DB = db
-	log.Println("数据库连接成功")
+	slog.Info("DB connected")
 	return nil
 }
 
-type BaseDAO[T any] struct {
-	data T
-}
-
-// NewBaseDAO 创建一个BaseDAO
-func NewBaseDAO[T any]() *BaseDAO[T] {
-	return &BaseDAO[T]{}
-}
-
-// Insert 插入数据
-func (dao *BaseDAO[T]) Insert() error {
-	res := DB.Create(&dao.data)
+// Insert
+// 通过范型实现通用 Insert 函数
+func Insert[T any](data T) error {
+	res := DB.Create(&data)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -41,7 +33,7 @@ func (dao *BaseDAO[T]) Insert() error {
 }
 
 // FindOne 查询一条数据
-func (dao *BaseDAO[T]) FindOne(conditions ...interface{}) (*T, error) {
+func FindOne[T any](conditions ...interface{}) (*T, error) {
 	var obj T
 	// 这里不使用 `Take()` 方法，因为 `Take()` 方法在没有找到数据时会返回 ErrRecordNotFound 错误
 	res := DB.Limit(1).Find(&obj, conditions...)

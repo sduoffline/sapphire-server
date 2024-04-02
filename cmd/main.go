@@ -17,6 +17,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = infra.InitRedis()
+	if err != nil {
+		panic(err)
+	}
 
 	// init gin
 	engine := gin.Default()

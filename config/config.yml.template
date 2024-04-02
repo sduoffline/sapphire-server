@@ -8,3 +8,9 @@ datasource:
     user: user
     password: password
     database: database
+  redis:
+    host: host
+    port: 6379
+    user: ''
+    password: ''
+    database: 0

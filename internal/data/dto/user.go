@@ -5,3 +5,8 @@ type Register struct {
 	Name   string `json:"name" binding:"required"`
 	Passwd string `json:"passwd" binding:"required"`
 }
+
+type Login struct {
+	Name   string `json:"name" binding:"required"`
+	Passwd string `json:"passwd" binding:"required"`
+}

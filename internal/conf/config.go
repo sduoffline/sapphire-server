@@ -19,6 +19,7 @@ type ServerConfig struct {
 
 type DataSourceConfig struct {
 	Postgres PostgresConfig
+	Redis    RedisConfig
 }
 
 type PostgresConfig struct {
@@ -27,6 +28,14 @@ type PostgresConfig struct {
 	User     string
 	Password string
 	Database string
+}
+
+type RedisConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Database int
 }
 
 var Conf *Config
@@ -66,5 +75,15 @@ func GetDBConfig() string {
 		Conf.Datasource.Postgres.Password,
 		Conf.Datasource.Postgres.Database,
 		Conf.Datasource.Postgres.Port)
+}
+
+func GetRedisConfig() string {
+	//	"redis://<user>:<pass>@localhost:6379/<db>"
+	return fmt.Sprintf("redis://%s:%s@%s:%d/%d",
+		Conf.Datasource.Redis.User,
+		Conf.Datasource.Redis.Password,
+		Conf.Datasource.Redis.Host,
+		Conf.Datasource.Redis.Port,
+		Conf.Datasource.Redis.Database)
 
 }
