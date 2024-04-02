@@ -1,13 +1,24 @@
 package infra
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"log"
+	"sapphire-server/internal/conf"
+)
 
 var (
 	DB *gorm.DB
 )
 
 func InitDB() error {
-	// TODO: implement this
+	dsn := conf.GetDBConfig()
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	DB = db
+	log.Println("数据库连接成功")
 	return nil
 }
 
@@ -32,7 +43,8 @@ func (dao *BaseDAO[T]) Insert() error {
 // FindOne 查询一条数据
 func (dao *BaseDAO[T]) FindOne(conditions ...interface{}) (*T, error) {
 	var obj T
-	res := DB.Take(&obj, conditions...)
+	// 这里不使用 `Take()` 方法，因为 `Take()` 方法在没有找到数据时会返回 ErrRecordNotFound 错误
+	res := DB.Limit(1).Find(&obj, conditions...)
 	if res.Error != nil {
 		return nil, res.Error
 	}
