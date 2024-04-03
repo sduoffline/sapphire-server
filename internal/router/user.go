@@ -32,7 +32,7 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 
 	// 由于功能简单，直接调用 domain 的方法
 	user := domain.NewUser()
-	err := user.Register(*body)
+	token, err := user.Register(*body)
 	if err != nil {
 		if err.Error() == "existed user" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("existed user"))
@@ -43,7 +43,11 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 	}
 	// 复杂的话在 service 层处理
 
-	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+	payload := map[string]interface{}{
+		"token": token,
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(payload))
 }
 
 func (u *UserRouter) HandleLogin(ctx *gin.Context) {
@@ -56,7 +60,7 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 
 	// 由于功能简单，直接调用 domain 层的方法
 	user := domain.NewUser()
-	err := user.Login(*body)
+	token, err := user.Login(*body)
 	if err != nil {
 		if err.Error() == "wrong password" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("wrong password"))
@@ -68,5 +72,9 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 	}
 	// 复杂的话在 service 层处理
 
-	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+	payload := map[string]interface{}{
+		"token": token,
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(payload))
 }

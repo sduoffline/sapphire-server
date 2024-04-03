@@ -2,12 +2,10 @@ package domain
 
 import (
 	"errors"
-	"golang.org/x/exp/slog"
 	"gorm.io/gorm"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
-	"sapphire-server/internal/infra"
-	"time"
+	"sapphire-server/pkg/util"
 )
 
 type User struct {
@@ -20,20 +18,13 @@ func NewUser() *User {
 	return &User{}
 }
 
-func (u *User) Register(register dto.Register) error {
-	var err error
+func (u *User) Register(register dto.Register) (token string, err error) {
 	// 检查是否有重名用户
-	existed, err := dao.FindOne[User]("name = ?", register.Name)
-	if err != nil {
-		return err
+	existedUser := u.loadUser(map[string]interface{}{"name": register.Name})
+	if existedUser != nil {
+		return "", errors.New("existed user")
 	}
-	slog.Info("existed", existed)
-	if existed.ID != 0 {
-		slog.Info("existed", existed)
-		return errors.New("existed user")
-	} else {
-		slog.Info("Not existed", existed)
-	}
+
 	// TODO: 对口令进行加密
 	encryptedPasswd := register.Passwd
 
@@ -42,22 +33,38 @@ func (u *User) Register(register dto.Register) error {
 	u.Password = encryptedPasswd
 	err = dao.Save(u)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	// 生成 token
+	token = util.GenerateJWT(u.ID)
+
+	return token, nil
 }
 
-func (u *User) Login(login dto.Login) error {
-	var err error
+func (u *User) Login(login dto.Login) (token string, err error) {
 	// 读取用户
-	user, err := dao.FindOne[User]("name = ?", login.Name)
-	if err != nil {
-		return err
+	user := u.loadUser(map[string]interface{}{"name": login.Name})
+	if user == nil {
+		return "", errors.New("user not found")
 	}
-	infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
+	// Redis DEMO
+	// infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
+	// 验证口令
 	if user.Password != login.Passwd {
-		return errors.New("wrong password")
+		return "", errors.New("wrong password")
 	}
-	return nil
+
+	// 生成 token
+	token = util.GenerateJWT(user.ID)
+
+	return token, nil
+}
+
+func (u *User) loadUser(param map[string]interface{}) *User {
+	user, err := dao.FindOne[User]("name = ?", param["name"])
+	if err != nil {
+		return nil
+	}
+	return user
 }
