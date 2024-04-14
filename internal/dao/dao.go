@@ -22,6 +22,14 @@ func FindOne[T any](conditions ...interface{}) (*T, error) {
 	return result, nil
 }
 
+func First[T any](conditions ...interface{}) (*T, error) {
+	result, err := infra.First[T](conditions...)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func FindAll[T any](conditions ...interface{}) ([]T, error) {
 	return nil, nil
 }

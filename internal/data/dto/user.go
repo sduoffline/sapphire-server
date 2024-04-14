@@ -4,6 +4,8 @@ package dto
 type Register struct {
 	Name   string `json:"name" binding:"required"`
 	Passwd string `json:"passwd" binding:"required"`
+	Email  string `json:"email" binding:"required"`
+	Avatar string `json:"avatar" binding:"required"`
 }
 
 type Login struct {

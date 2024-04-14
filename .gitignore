@@ -8,6 +8,12 @@
 *.so
 *.dylib
 
+# Intellij
+.idea
+
+# VS Code
+.vscode
+
 # Test binary, built with `go test -c`
 *.test
 
