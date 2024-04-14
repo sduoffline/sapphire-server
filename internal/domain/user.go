@@ -6,12 +6,17 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/pkg/util"
+	"strconv"
+	"time"
 )
 
 type User struct {
 	gorm.Model
 	Name     string `gorm:"column:name"`
 	Password string `gorm:"column:password"`
+	Email    string `gorm:"column:email"`
+	Uid      string `gorm:"column:uid"`
+	Avatar   string `gorm:"column:avatar"`
 }
 
 func NewUser() *User {
@@ -31,6 +36,10 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 	// 插入用户
 	u.Name = register.Name
 	u.Password = encryptedPasswd
+	u.Email = register.Email
+	// TODO: 生成 UID
+	u.Uid = strconv.FormatInt(time.Now().Unix(), 10)
+	u.Avatar = register.Avatar
 	err = dao.Save(u)
 	if err != nil {
 		return "", err
@@ -62,7 +71,7 @@ func (u *User) Login(login dto.Login) (token string, err error) {
 }
 
 func (u *User) loadUser(param map[string]interface{}) *User {
-	user, err := dao.FindOne[User]("name = ?", param["name"])
+	user, err := dao.First[User]("name = ?", param["name"])
 	if err != nil {
 		return nil
 	}

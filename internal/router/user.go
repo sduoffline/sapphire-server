@@ -29,7 +29,6 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
-
 	// 由于功能简单，直接调用 domain 的方法
 	user := domain.NewUser()
 	token, err := user.Register(*body)
