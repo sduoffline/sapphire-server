@@ -24,7 +24,7 @@ func (t *TestRouter) HandleHw(ctx *gin.Context) {
 
 // HandleUpload Upload a picture
 func (t *TestRouter) HandleUpload(ctx *gin.Context) {
-	url := ""
-	basicAuth := ""
-	imgFile := ctx.FormFile("img")
+	//url := ""
+	//basicAuth := ""
+	//imgFile := ctx.FormFile("img")
 }

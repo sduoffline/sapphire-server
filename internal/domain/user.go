@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
@@ -30,8 +31,10 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 		return "", errors.New("existed user")
 	}
 
-	// TODO: 对口令进行加密
-	encryptedPasswd := register.Passwd
+	encryptedPasswd, err := hashPassword(register.Passwd)
+	if err != nil {
+		return "", err
+	}
 
 	// 插入用户
 	u.Name = register.Name
@@ -61,8 +64,10 @@ func (u *User) Login(login dto.Login) (token string, err error) {
 	// Redis DEMO
 	// infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
 	// 验证口令
-	// TODO: 当然，在上了口令加密以后，这里也要进行加密对比
-	if user.Password != login.Passwd {
+
+	err = verifyPassword(user.Password, login.Passwd)
+
+	if err != nil {
 		return "", errors.New("wrong password")
 	}
 
@@ -78,4 +83,20 @@ func (u *User) loadUser(param map[string]interface{}) *User {
 		return nil
 	}
 	return user
+}
+
+// hashPassword 生成密码哈希
+func hashPassword(password string) (string, error) {
+	// 使用 bcrypt 生成哈希，第二个参数是哈希强度，越高越安全
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+// verifyPassword 验证密码是否匹配哈希
+func verifyPassword(hashedPassword, password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err
 }
