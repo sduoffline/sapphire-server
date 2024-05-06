@@ -24,14 +24,14 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 // HandleRegister 注册
 func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 	// 提取请求体到 Register 结构体
-	body := &dto.Register{}
-	if err := ctx.BindJSON(body); err != nil {
+	body := dto.Register{}
+	if err := ctx.BindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
 	// 由于功能简单，直接调用 domain 的方法
 	user := domain.NewUser()
-	token, err := user.Register(*body)
+	token, err := user.Register(body)
 	if err != nil {
 		if err.Error() == "existed user" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("existed user"))

@@ -38,6 +38,7 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 	u.Password = encryptedPasswd
 	u.Email = register.Email
 	// TODO: 生成 UID
+	//strconv.Itoa()
 	u.Uid = strconv.FormatInt(time.Now().Unix(), 10)
 	u.Avatar = register.Avatar
 	err = dao.Save(u)
@@ -60,6 +61,7 @@ func (u *User) Login(login dto.Login) (token string, err error) {
 	// Redis DEMO
 	// infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
 	// 验证口令
+	// TODO: 当然，在上了口令加密以后，这里也要进行加密对比
 	if user.Password != login.Passwd {
 		return "", errors.New("wrong password")
 	}
