@@ -33,6 +33,16 @@ func Insert[T any](data T) error {
 	return nil
 }
 
+// UpdateSingleColumn
+// 通过范型实现通用 UpdateSingleColumn 函数
+func UpdateSingleColumn[T any](data T, column string, value interface{}) error {
+	res := DB.Model(&data).Update(column, value)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
 // FindOne 查询一条数据
 func FindOne[T any](conditions ...interface{}) (*T, error) {
 	var obj T

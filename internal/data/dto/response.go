@@ -14,6 +14,10 @@ func NewResponse(code int, message string, data interface{}) *Response {
 	}
 }
 
+func ok() {
+	NewResponse(200, "success", nil)
+}
+
 func NewSuccessResponse(data interface{}) *Response {
 	return NewResponse(200, "success", data)
 }

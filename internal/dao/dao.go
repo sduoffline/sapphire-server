@@ -37,3 +37,8 @@ func FindAll[T any](conditions ...interface{}) ([]T, error) {
 func FindPage[T any](page int, pageSize int, conditions ...interface{}) ([]T, error) {
 	return nil, nil
 }
+
+func Modify[T any](data T, column string, value string) error {
+	infra.UpdateSingleColumn(data, column, value)
+	return nil
+}
