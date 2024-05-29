@@ -34,6 +34,7 @@ func main() {
 	router.NewTaskRouter(engine)
 	router.NewImgRouter(engine)
 	router.NewDatasetRouter(engine)
+	router.NewAnnotationRouter(engine)
 	router.NewTestRouter(engine)
 
 	// start http server

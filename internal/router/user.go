@@ -20,7 +20,25 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	userGroup.POST("/register", router.HandleRegister)
 	userGroup.POST("/login", router.HandleLogin)
 	userGroup.POST("/change-role", router.HandleChangeRole)
+	userGroup.GET("/profile", router.HandleProfile)
+
+	statisticGroup := userGroup.Group("/statistic")
+	statisticGroup.GET("/credit", router.HandleCredit)
 	return router
+}
+
+// HandleProfile 获取用户信息
+func (u *UserRouter) HandleProfile(ctx *gin.Context) {
+	userId := ctx.Query("userId")
+	user, err := dao.First[domain.User]("id = ?", userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	} else if user == nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("user not found"))
+		return
+	}
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user))
 }
 
 // HandleRegister 注册
@@ -102,4 +120,18 @@ func (u *UserRouter) HandleChangeRole(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
+}
+
+// HandleCredit 获取用户积分
+func (u *UserRouter) HandleCredit(ctx *gin.Context) {
+	userId := ctx.Query("userId")
+	user, err := dao.First[domain.User]("id = ?", userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	} else if user == nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("user not found"))
+		return
+	}
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user.Score))
 }

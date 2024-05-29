@@ -20,6 +20,7 @@ type User struct {
 	Uid      string `gorm:"column:uid"`
 	Avatar   string `gorm:"column:avatar"`
 	Role     int    `gorm:"column:role"`
+	Score    int    `gorm:"column:score"`
 }
 
 type UserRole struct {
