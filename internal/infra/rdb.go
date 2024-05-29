@@ -1,7 +1,6 @@
 package infra
 
 import (
-	"errors"
 	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -59,11 +58,21 @@ func First[T any](conditions ...interface{}) (*T, error) {
 	// 和 FindOne 的区别是，当没有找到数据时，First 会返回 ErrRecordNotFound 错误
 	var obj T
 	res := DB.First(&obj, conditions...)
-	if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
+	// if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+	// 	return nil, nil
+	// }
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return &obj, nil
+}
+
+// FindAll 查询所有数据
+func FindAll[T any](conditions ...interface{}) ([]T, error) {
+	var objs []T
+	res := DB.Find(&objs, conditions...)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return objs, nil
 }

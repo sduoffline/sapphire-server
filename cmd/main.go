@@ -31,6 +31,8 @@ func main() {
 	// init http routes
 	// 调用 internal/router/user.go 中的 NewUserRouter 方法
 	router.NewUserRouter(engine)
+	router.NewTaskRouter(engine)
+	router.NewImgRouter(engine)
 	router.NewTestRouter(engine)
 
 	// start http server

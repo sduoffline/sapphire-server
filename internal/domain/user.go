@@ -19,7 +19,7 @@ type User struct {
 	Email    string `gorm:"column:email"`
 	Uid      string `gorm:"column:uid"`
 	Avatar   string `gorm:"column:avatar"`
-	Role     string `gorm:"column:role"`
+	Role     int    `gorm:"column:role"`
 }
 
 type UserRole struct {
@@ -60,7 +60,7 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 	if err != nil {
 		return "", err
 	} else {
-		u.Role = strconv.Itoa(role)
+		u.Role = role
 	}
 
 	err = dao.Save(u)
@@ -85,7 +85,6 @@ func (u *User) Login(login dto.Login) (token string, err error) {
 	// 验证口令
 
 	err = user.verifyPassword(user.Password, login.Passwd)
-
 	if err != nil {
 		return "", errors.New("wrong password")
 	}
