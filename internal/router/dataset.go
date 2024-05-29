@@ -37,6 +37,7 @@ func (t *DatasetRouter) HandleMyList(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
+// HandleCreate 创建数据集
 func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	name := ctx.PostForm("name")
 	creatorID, _ := strconv.Atoi(ctx.PostForm("creator_id"))
