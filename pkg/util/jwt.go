@@ -12,6 +12,7 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
+// GenerateJWT TODO: 这里肯定不可能只以 user_id 签发 token 的，之后再改
 func GenerateJWT(userID uint) string {
 	claims := UserClaims{
 		ID:               userID,

@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 )
@@ -18,20 +19,21 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	userGroup := engine.Group("/user")
 	userGroup.POST("/register", router.HandleRegister)
 	userGroup.POST("/login", router.HandleLogin)
+	userGroup.POST("/change-role", router.HandleChangeRole)
 	return router
 }
 
 // HandleRegister 注册
 func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 	// 提取请求体到 Register 结构体
-	body := &dto.Register{}
-	if err := ctx.BindJSON(body); err != nil {
+	body := dto.Register{}
+	if err := ctx.BindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
 	// 由于功能简单，直接调用 domain 的方法
 	user := domain.NewUser()
-	token, err := user.Register(*body)
+	token, err := user.Register(body)
 	if err != nil {
 		if err.Error() == "existed user" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("existed user"))
@@ -41,11 +43,9 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 		return
 	}
 	// 复杂的话在 service 层处理
-
 	payload := map[string]interface{}{
 		"token": token,
 	}
-
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(payload))
 }
 
@@ -70,10 +70,36 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 		}
 	}
 	// 复杂的话在 service 层处理
-
 	payload := map[string]interface{}{
 		"token": token,
 	}
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(payload))
+}
+
+// HandleChangeRole 根据用户 id 更改权限
+func (u *UserRouter) HandleChangeRole(ctx *gin.Context) {
+	userId := ctx.Query("userId")
+	role := ctx.PostForm("role")
+	//fmt.Println("userId:", userId, "role:", role)
+	if role == "" {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("role is required"))
+		return
+	}
+	if userId == "" {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("userId is required"))
+		return
+	}
+	user, err := dao.First[domain.User]("id = ?", userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	} else if user == nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("user not found"))
+		return
+	}
+	err = dao.Modify(user, "role", role)
+	if err != nil {
+		return
+	}
 }

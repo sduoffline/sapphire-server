@@ -32,6 +32,16 @@ func Insert[T any](data T) error {
 	return nil
 }
 
+// UpdateSingleColumn
+// 通过范型实现通用 UpdateSingleColumn 函数
+func UpdateSingleColumn[T any](data T, column string, value interface{}) error {
+	res := DB.Model(&data).Update(column, value)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
 // FindOne 查询一条数据
 func FindOne[T any](conditions ...interface{}) (*T, error) {
 	var obj T
@@ -48,8 +58,21 @@ func First[T any](conditions ...interface{}) (*T, error) {
 	// 和 FindOne 的区别是，当没有找到数据时，First 会返回 ErrRecordNotFound 错误
 	var obj T
 	res := DB.First(&obj, conditions...)
+	// if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+	// 	return nil, nil
+	// }
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return &obj, nil
+}
+
+// FindAll 查询所有数据
+func FindAll[T any](conditions ...interface{}) ([]T, error) {
+	var objs []T
+	res := DB.Find(&objs, conditions...)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return objs, nil
 }

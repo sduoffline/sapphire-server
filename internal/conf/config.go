@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Server     ServerConfig
 	Datasource DataSourceConfig
+	Image      ImgConfig
 }
 
 type ServerConfig struct {
@@ -36,6 +37,12 @@ type RedisConfig struct {
 	User     string
 	Password string
 	Database int
+}
+
+type ImgConfig struct {
+	SvrUrl    string
+	DirectUrl string
+	Auth      string
 }
 
 var Conf *Config
@@ -86,4 +93,11 @@ func GetRedisConfig() string {
 		Conf.Datasource.Redis.Port,
 		Conf.Datasource.Redis.Database)
 
+}
+
+func GetImgConfig() string {
+	return fmt.Sprintf("svrUrl: %s; directUrl: %s; auth string: %s;",
+		Conf.Image.SvrUrl,
+		Conf.Image.DirectUrl,
+		Conf.Image.Auth)
 }

@@ -1,6 +1,8 @@
 package dao
 
-import "sapphire-server/internal/infra"
+import (
+	"sapphire-server/internal/infra"
+)
 
 func Save[T any](data T) error {
 	err := infra.Insert(data)
@@ -31,9 +33,18 @@ func First[T any](conditions ...interface{}) (*T, error) {
 }
 
 func FindAll[T any](conditions ...interface{}) ([]T, error) {
-	return nil, nil
+	all, err := infra.FindAll[T](conditions...)
+	if err != nil {
+		return nil, err
+	}
+	return all, nil
 }
 
 func FindPage[T any](page int, pageSize int, conditions ...interface{}) ([]T, error) {
 	return nil, nil
+}
+
+func Modify[T any](data T, column string, value string) error {
+	infra.UpdateSingleColumn(data, column, value)
+	return nil
 }

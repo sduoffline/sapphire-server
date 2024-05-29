@@ -25,12 +25,16 @@ func main() {
 
 	// init gin
 	engine := gin.Default()
-	engine.Use(gin.Logger())
-	engine.Use(gin.Recovery())
+	//engine.Use(gin.Logger())
+	//engine.Use(gin.Recovery())
 	engine.Use(middleware.AuthMiddleware())
 	// init http routes
 	// 调用 internal/router/user.go 中的 NewUserRouter 方法
 	router.NewUserRouter(engine)
+	router.NewTaskRouter(engine)
+	router.NewImgRouter(engine)
+	router.NewDatasetRouter(engine)
+	router.NewTestRouter(engine)
 
 	// start http server
 	err = engine.Run(conf.GetServerAddr())
