@@ -33,6 +33,7 @@ func main() {
 	router.NewUserRouter(engine)
 	router.NewTaskRouter(engine)
 	router.NewImgRouter(engine)
+	router.NewDatasetRouter(engine)
 	router.NewTestRouter(engine)
 
 	// start http server
