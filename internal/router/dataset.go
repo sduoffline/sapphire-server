@@ -17,7 +17,9 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	router := &DatasetRouter{}
 	datasetGroup := engine.Group("/dataset")
 	datasetGroup.GET("/list", router.HandleList)
-	datasetGroup.GET("/my-list", router.HandleMyList)
+	datasetGroup.GET("/created/list", router.HandleCreatedList)
+	datasetGroup.GET("/joined/list", router.HandleJoinedList)
+	datasetGroup.GET("/user/list", router.HandleList)
 	datasetGroup.POST("/create", router.HandleCreate)
 	datasetGroup.POST("/delete", router.HandleDelete)
 	datasetGroup.POST("/register", router.HandleRegister)
@@ -31,15 +33,29 @@ var datasetService = service.NewDatasetService()
 
 // HandleList 获取公开且未删除的数据集
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
-	datasets := datasetService.GetDatasetList()
+	datasets := datasetService.GetAllDatasetList()
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
-// HandleMyList 获取用户创建的数据集
-func (t *DatasetRouter) HandleMyList(ctx *gin.Context) {
+// HandleCreatedList 获取用户创建的数据集
+func (t *DatasetRouter) HandleCreatedList(ctx *gin.Context) {
 	// TODO: 从token中获取用户ID
 	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
-	datasets := datasetService.GetMyDatasetList(creatorID)
+	datasets := datasetService.GetUserCreatedDatasetList(creatorID)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
+}
+
+// HandleJoinedList 获取用户加入的数据集
+func (t *DatasetRouter) HandleJoinedList(ctx *gin.Context) {
+	createID, _ := strconv.Atoi(ctx.Query("creator_id"))
+	datasets := datasetService.GetUserJoinedDatasetList(createID)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
+}
+
+// HandleUserList 获取用户创建的数据集
+func (t *DatasetRouter) HandleUserList(ctx *gin.Context) {
+	userID, _ := strconv.Atoi(ctx.Query("user_id"))
+	datasets := datasetService.GetUserCreatedDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 

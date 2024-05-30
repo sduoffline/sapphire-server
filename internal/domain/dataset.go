@@ -103,6 +103,14 @@ func (d *Dataset) GetDatasetList() ([]Dataset, error) {
 	return res, nil
 }
 
+func (d *Dataset) ListUserJoinedDatasetList(userID int) ([]Dataset, error) {
+	res, err := dao.Query[Dataset]("select * from datasets where id in (select dataset_id from dataset_users where user_id = ?)", userID)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // GetDatasetListByUserID 根据用户 ID 获取数据集列表
 func (d *Dataset) GetDatasetListByUserID(createdID int) ([]Dataset, error) {
 	res, err := dao.FindAll[Dataset]("creator_id = ?", createdID)
