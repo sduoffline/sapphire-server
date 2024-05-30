@@ -29,6 +29,8 @@ func main() {
 	//engine.Use(gin.Recovery())
 	engine.Use(middleware.AuthMiddleware())
 	// init http routes
+	engine.Use(middleware.Cors())
+
 	// 调用 internal/router/user.go 中的 NewUserRouter 方法
 	router.NewUserRouter(engine)
 	router.NewTaskRouter(engine)
