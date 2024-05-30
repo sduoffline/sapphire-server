@@ -22,6 +22,8 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	datasetGroup.POST("/delete", router.HandleDelete)
 	datasetGroup.POST("/register", router.HandleRegister)
 	datasetGroup.GET("/:id", router.HandleGetByID)
+
+	datasetGroup.POST("/join/:id", router.HandleJoin)
 	return router
 }
 
@@ -39,6 +41,29 @@ func (t *DatasetRouter) HandleMyList(ctx *gin.Context) {
 	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
 	datasets := datasetService.GetMyDatasetList(creatorID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
+}
+
+// HandleJoin 加入数据集
+func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
+	var err error
+
+	setID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+	creatorID, err := strconv.Atoi(ctx.Query("creator_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid creator id"))
+		return
+	}
+
+	err = domain.NewDatasetDomain().AddUserToDataset(creatorID, setID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
 // HandleCreate 创建数据集

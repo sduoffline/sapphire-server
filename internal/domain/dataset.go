@@ -32,8 +32,27 @@ type ImgDataset struct {
 	EmbeddingUrl string `gorm:"column:embedding_url" json:"embeddingUrl"`
 }
 
+type DatasetUser struct {
+	gorm.Model
+	UserID    int `gorm:"column:user_id"`
+	DatasetID int `gorm:"column:dataset_id"`
+}
+
 func NewDatasetDomain() *Dataset {
 	return &Dataset{}
+}
+
+func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
+	datasetUser := &DatasetUser{
+		UserID:    userID,
+		DatasetID: datasetID,
+	}
+	err := dao.Save(datasetUser)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateDataset 创建数据集
