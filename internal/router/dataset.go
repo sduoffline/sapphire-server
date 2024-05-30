@@ -120,12 +120,6 @@ func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 // HandleGetByID 根据 ID 获取数据集
 func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Param("id"))
-	dataset := domain.NewDataset()
-	dataset.ID = uint(datasetID)
-	res, err := dao.First[domain.Dataset]("id = ?", datasetID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
-		return
-	}
-	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
+	dataset := datasetService.GetDatasetDetail(datasetID)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(dataset))
 }

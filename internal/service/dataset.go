@@ -43,6 +43,14 @@ func newDatasetResult(dataset *domain.Dataset) *DatasetResult {
 	}
 }
 
+func newDatasetItem(data *domain.ImgDataset) DatasetItem {
+	return DatasetItem{
+		ImgUrl:       data.ImgUrl,
+		EmbeddingUrl: data.EmbeddingUrl,
+		Id:           int(data.ID),
+	}
+}
+
 var datasetDomain = domain.NewDataset()
 
 // GetDatasetList 获取数据集列表
@@ -71,6 +79,25 @@ func (service *DatasetService) GetMyDatasetList(creatorID int) []*DatasetResult 
 	results := service.buildResultList(datasets)
 
 	return results
+}
+
+func (service *DatasetService) GetDatasetDetail(id int) *DatasetResult {
+	dataset, err := datasetDomain.GetDatasetByID(id)
+	if err != nil {
+		return nil
+	}
+	datas, err := datasetDomain.GetDatasetDataList(id)
+	if err != nil {
+		return nil
+	}
+
+	result := newDatasetResult(dataset)
+	result.Datas = make([]DatasetItem, 0)
+	for _, data := range datas {
+		result.Datas = append(result.Datas, newDatasetItem(&data))
+	}
+
+	return result
 }
 
 // 将 domain.Dataset 转换为 DatasetResult 的列表

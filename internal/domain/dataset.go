@@ -19,15 +19,16 @@ type Dataset struct {
 }
 
 type DatasetType struct {
-	Id       int    `gorm:"column:id"`
+	gorm.Model
 	TypeName string `gorm:"column:name"`
 	Desc     string `gorm:"column:description"`
 }
 
 type ImgDataset struct {
-	Id        int    `gorm:"column:id"`
-	ImgUrl    string `gorm:"column:img_url"`
-	DatasetId int    `gorm:"column:dataset_id"`
+	gorm.Model
+	ImgUrl       string `gorm:"column:img_url"`
+	DatasetId    int    `gorm:"column:dataset_id"`
+	EmbeddingUrl string `gorm:"column:embedding_url"`
 }
 
 func NewDataset() *Dataset {
@@ -60,7 +61,7 @@ func (d *Dataset) DeleteDataset() {
 
 // GetDatasetByID 根据 ID 获取数据集
 func (d *Dataset) GetDatasetByID(id int) (*Dataset, error) {
-	res, err := dao.First[Dataset]("id = ?", d.ID)
+	res, err := dao.First[Dataset]("id = ?", id)
 	if err != nil {
 		return nil, err
 	}
@@ -104,4 +105,13 @@ func (d *Dataset) RegisterImage(imgUrl string, datasetID int) {
 	if err != nil {
 		return
 	}
+}
+
+// GetDatasetDataList 获取数据集数据列表
+func (d *Dataset) GetDatasetDataList(id int) ([]ImgDataset, error) {
+	res, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
