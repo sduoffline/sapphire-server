@@ -126,7 +126,7 @@ func (service *DatasetService) GetUserDatasetList(userID int) []*DatasetResult {
 }
 
 // GetDatasetDetail 获取数据集详情
-func (service *DatasetService) GetDatasetDetail(id int) *DatasetResult {
+func (service *DatasetService) GetDatasetDetail(userId int, id int) *DatasetResult {
 	dataset, err := datasetDomain.GetDatasetByID(id)
 	if err != nil {
 		return nil
@@ -136,8 +136,9 @@ func (service *DatasetService) GetDatasetDetail(id int) *DatasetResult {
 		return nil
 	}
 
-	// TODO: 这里的 isOwner 和 isClaim 需要根据用户ID来判断
-	result := NewDatasetResult(dataset, false, false)
+	isOwner := dataset.CreatorID == userId
+	isClaim := datasetDomain.IsUserClaimDataset(userId, id)
+	result := NewDatasetResult(dataset, isOwner, isClaim)
 	result.Datas = make([]DatasetItem, 0)
 	for _, data := range datas {
 		result.Datas = append(result.Datas, newDatasetItem(&data))

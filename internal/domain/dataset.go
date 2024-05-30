@@ -42,6 +42,7 @@ func NewDatasetDomain() *Dataset {
 	return &Dataset{}
 }
 
+// AddUserToDataset 添加用户到数据集
 func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
 	var err error
 	exist, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
@@ -64,6 +65,7 @@ func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
 	return nil
 }
 
+// RemoveUserFromDataset 移除用户从数据集
 func (d *Dataset) RemoveUserFromDataset(userID int, datasetID int) error {
 	var err error
 	record, err := dao.First[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
@@ -79,6 +81,18 @@ func (d *Dataset) RemoveUserFromDataset(userID int, datasetID int) error {
 		return err
 	}
 	return nil
+}
+
+// IsUserClaimDataset 判断用户是否拥有数据集
+func (d *Dataset) IsUserClaimDataset(userID int, datasetID int) bool {
+	record, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
+	if err != nil {
+		return false
+	}
+	if record == nil {
+		return false
+	}
+	return true
 }
 
 // CreateDataset 创建数据集

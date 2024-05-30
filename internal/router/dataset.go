@@ -136,7 +136,7 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	}
 
 	// 返回创建的数据集
-	res := datasetService.GetDatasetDetail(int(dataset.ID))
+	res := datasetService.GetDatasetDetail(creatorID, int(dataset.ID))
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
@@ -203,6 +203,7 @@ func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 // HandleGetByID 根据 ID 获取数据集
 func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Param("id"))
-	dataset := datasetService.GetDatasetDetail(datasetID)
+	userID, _ := strconv.Atoi(ctx.Query("user_id"))
+	dataset := datasetService.GetDatasetDetail(userID, datasetID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(dataset))
 }
