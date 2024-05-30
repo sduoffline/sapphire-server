@@ -13,6 +13,10 @@ func Save[T any](data T) error {
 }
 
 func Delete[T any](data T) error {
+	err := infra.Delete(data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

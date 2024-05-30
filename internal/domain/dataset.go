@@ -43,12 +43,38 @@ func NewDatasetDomain() *Dataset {
 }
 
 func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
+	var err error
+	exist, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
+	if err != nil {
+		return err
+	}
+	if exist != nil {
+		return nil
+	}
+
 	datasetUser := &DatasetUser{
 		UserID:    userID,
 		DatasetID: datasetID,
 	}
-	err := dao.Save(datasetUser)
+	err = dao.Save(datasetUser)
 
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dataset) RemoveUserFromDataset(userID int, datasetID int) error {
+	var err error
+	record, err := dao.First[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
+	if err != nil {
+		return err
+	}
+	if record == nil {
+		return nil
+	}
+
+	err = dao.Delete(record)
 	if err != nil {
 		return err
 	}

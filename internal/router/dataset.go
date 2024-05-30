@@ -30,6 +30,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	datasetGroup.GET("/:id", router.HandleGetByID)
 
 	datasetGroup.POST("/join/:id", router.HandleJoin)
+	datasetGroup.POST("/quit/:id", router.HandleQuit)
 	return router
 }
 
@@ -79,6 +80,29 @@ func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
 	}
 
 	err = domain.NewDatasetDomain().AddUserToDataset(creatorID, setID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+}
+
+// HandleQuit 退出数据集
+func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
+	var err error
+
+	setID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+	creatorID, err := strconv.Atoi(ctx.Query("creator_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid creator id"))
+		return
+	}
+
+	err = domain.NewDatasetDomain().RemoveUserFromDataset(creatorID, setID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return

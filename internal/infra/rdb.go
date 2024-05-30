@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"errors"
 	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -32,6 +33,14 @@ func Insert[T any](data T) error {
 	return nil
 }
 
+func Delete[T any](data T) error {
+	res := DB.Delete(&data)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
 // UpdateSingleColumn
 // 通过范型实现通用 UpdateSingleColumn 函数
 func UpdateSingleColumn[T any](data T, column string, value interface{}) error {
@@ -46,7 +55,10 @@ func UpdateSingleColumn[T any](data T, column string, value interface{}) error {
 func FindOne[T any](conditions ...interface{}) (*T, error) {
 	var obj T
 	// 这里不使用 `Take()` 方法，因为 `Take()` 方法在没有找到数据时会返回 ErrRecordNotFound 错误
-	res := DB.Limit(1).Find(&obj, conditions...)
+	res := DB.Take(&obj, conditions...)
+	if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -55,12 +67,11 @@ func FindOne[T any](conditions ...interface{}) (*T, error) {
 
 // First 查询第一条数据
 func First[T any](conditions ...interface{}) (*T, error) {
-	// 和 FindOne 的区别是，当没有找到数据时，First 会返回 ErrRecordNotFound 错误
 	var obj T
-	res := DB.First(&obj, conditions...)
-	// if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-	// 	return nil, nil
-	// }
+	res := DB.Take(&obj, conditions...)
+	if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
