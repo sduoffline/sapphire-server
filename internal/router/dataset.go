@@ -21,7 +21,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	datasetGroup.GET("/list", router.HandleList)
 	datasetGroup.GET("/created/list", router.HandleCreatedList)
 	datasetGroup.GET("/joined/list", router.HandleJoinedList)
-	datasetGroup.GET("/user/list", router.HandleList)
+	datasetGroup.GET("/user/list", router.HandleUserList)
 	datasetGroup.POST("/create", router.HandleCreate)
 	datasetGroup.POST("/update/:id", router.HandleUpdateImg)
 
@@ -60,7 +60,7 @@ func (t *DatasetRouter) HandleJoinedList(ctx *gin.Context) {
 // HandleUserList 获取用户创建的数据集
 func (t *DatasetRouter) HandleUserList(ctx *gin.Context) {
 	userID, _ := strconv.Atoi(ctx.Query("user_id"))
-	datasets := datasetService.GetUserCreatedDatasetList(userID)
+	datasets := datasetService.GetUserDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
