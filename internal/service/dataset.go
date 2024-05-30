@@ -55,7 +55,7 @@ func newDatasetItem(data *domain.ImgDataset) DatasetItem {
 var datasetDomain = domain.NewDatasetDomain()
 
 // GetAllDatasetList 获取数据集列表
-func (service *DatasetService) GetAllDatasetList() []*DatasetResult {
+func (service *DatasetService) GetAllDatasetList(userID int) []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetList()
 	if err != nil {
@@ -63,8 +63,32 @@ func (service *DatasetService) GetAllDatasetList() []*DatasetResult {
 		return make([]*DatasetResult, 0)
 	}
 
-	results := service.buildResultList(datasets, false, false)
+	// 读取用户创建的数据集和加入的数据集
+	userCreatedDatasets, err := datasetDomain.GetDatasetListByUserID(userID)
+	if err != nil {
+		return make([]*DatasetResult, 0)
+	}
+	userCreatedMap := make(map[int]bool)
+	for _, dataset := range userCreatedDatasets {
+		userCreatedMap[int(dataset.ID)] = true
+	}
+	userJoinedDatasets, err := datasetDomain.ListUserJoinedDatasetList(userID)
+	if err != nil {
+		return make([]*DatasetResult, 0)
+	}
+	userJoinedMap := make(map[int]bool)
+	for _, dataset := range userJoinedDatasets {
+		userJoinedMap[int(dataset.ID)] = true
+	}
 
+	// 构建结果列表
+	results := make([]*DatasetResult, 0)
+	for _, dataset := range datasets {
+		isOwner := userCreatedMap[int(dataset.ID)]
+		isClaim := userJoinedMap[int(dataset.ID)]
+		result := NewDatasetResult(&dataset, isOwner, isClaim)
+		results = append(results, result)
+	}
 	return results
 }
 

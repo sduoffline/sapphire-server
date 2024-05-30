@@ -38,7 +38,9 @@ var datasetService = service.NewDatasetService()
 
 // HandleList 获取公开且未删除的数据集
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
-	datasets := datasetService.GetAllDatasetList()
+	userID, _ := strconv.Atoi(ctx.Query("user_id"))
+
+	datasets := datasetService.GetAllDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
