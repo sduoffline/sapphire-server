@@ -27,9 +27,9 @@ type DatasetType struct {
 
 type ImgDataset struct {
 	gorm.Model
-	ImgUrl       string `gorm:"column:img_url"`
-	DatasetId    int    `gorm:"column:dataset_id"`
-	EmbeddingUrl string `gorm:"column:embedding_url"`
+	ImgUrl       string `gorm:"column:img_url" json:"imgUrl"`
+	DatasetId    int    `gorm:"column:dataset_id" json:"datasetId"`
+	EmbeddingUrl string `gorm:"column:embedding_url" json:"embeddingUrl"`
 }
 
 func NewDatasetDomain() *Dataset {
@@ -117,6 +117,14 @@ func (d *Dataset) RegisterImage(imgUrl string, datasetID int) {
 // GetDatasetDataList 获取数据集数据列表
 func (d *Dataset) GetDatasetDataList(id int) ([]ImgDataset, error) {
 	res, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (d *Dataset) GetImgByDatasetID(id int, size int) ([]ImgDataset, error) {
+	res, err := dao.Query[ImgDataset]("select * from img_datasets where dataset_id = ? limit ?", id, size)
 	if err != nil {
 		return nil, err
 	}

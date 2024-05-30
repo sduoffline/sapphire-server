@@ -44,6 +44,14 @@ func FindPage[T any](page int, pageSize int, conditions ...interface{}) ([]T, er
 	return nil, nil
 }
 
+func Query[T any](sql string, args ...interface{}) ([]T, error) {
+	result, err := infra.Query[T](sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func Modify[T any](data T, column string, value string) error {
 	infra.UpdateSingleColumn(data, column, value)
 	return nil

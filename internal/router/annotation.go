@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"sapphire-server/internal/dao"
+	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"strconv"
 )
@@ -13,8 +14,22 @@ type AnnotationRouter struct {
 
 func NewAnnotationRouter(engine *gin.Engine) {
 	router := &AnnotationRouter{}
-	annotationGroup := engine.Group("/annotation")
+	annotationGroup := engine.Group("/annotate")
+	annotationGroup.GET("/:set_id", router.HandleGetAnnotation)
 	annotationGroup.POST("/make", router.HandleMake)
+}
+
+var datasetDomain = domain.NewDatasetDomain()
+
+func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
+	datasetID, _ := strconv.Atoi(ctx.Param("set_id"))
+	size, _ := strconv.Atoi(ctx.Query("size"))
+	images, err := datasetDomain.GetImgByDatasetID(datasetID, size)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "get images failed"})
+		return
+	}
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(images))
 }
 
 func (a *AnnotationRouter) HandleMake(ctx *gin.Context) {

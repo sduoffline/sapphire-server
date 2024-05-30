@@ -76,3 +76,13 @@ func FindAll[T any](conditions ...interface{}) ([]T, error) {
 	}
 	return objs, nil
 }
+
+// Query 执行原生 SQL 查询
+func Query[T any](sql string, args ...interface{}) ([]T, error) {
+	var objs []T
+	res := DB.Raw(sql, args...).Scan(&objs)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return objs, nil
+}
