@@ -3,7 +3,6 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"strconv"
@@ -20,6 +19,7 @@ func NewAnnotationRouter(engine *gin.Engine) {
 }
 
 var datasetDomain = domain.NewDatasetDomain()
+var annotationDomain = domain.NewAnnotationDomain()
 
 func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Param("set_id"))
@@ -33,44 +33,16 @@ func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 }
 
 func (a *AnnotationRouter) HandleMake(ctx *gin.Context) {
-	datasetId, _ := strconv.Atoi(ctx.PostForm("dataset_id"))
-	content := ctx.PostForm("content")
-	markerId, _ := strconv.Atoi(ctx.PostForm("marker_id"))
-	var ReplicaCount int
-	if rc := ctx.PostForm("replica_count"); rc != "" {
-		ReplicaCount, _ = strconv.Atoi(rc)
-	}
-	var QualifiedCount int
-	if qc := ctx.PostForm("qualified_count"); qc != "" {
-		QualifiedCount, _ = strconv.Atoi(qc)
-	}
-	var DeliveredCount int
-	if dc := ctx.PostForm("delivered_count"); dc != "" {
-		DeliveredCount, _ = strconv.Atoi(dc)
-	}
-	// Create a new annotation
-	annotation := domain.NewAnnotation()
-	annotation.DatasetID = uint(datasetId)
-	annotation.Content = content
-	annotation.ReplicaCount = ReplicaCount
-	annotation.QualifiedCount = QualifiedCount
-	annotation.DeliveredCount = DeliveredCount
-	// Save the annotation
-	err := dao.Save(annotation)
-	if err != nil {
+	body := dto.NewAnnotation{}
+	if err := ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
 
-	annotationUser := domain.AnnotationUser{
-		ID:           0,
-		AnnotationId: annotation.ID,
-		UserId:       uint(markerId),
-		Status:       0,
-		Result:       "",
-	}
-	err = dao.Save(annotationUser)
+	annotation, err := annotationDomain.CreateAnnotation(body)
 	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
-	ctx.JSON(http.StatusOK, annotation)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(annotation))
 }
