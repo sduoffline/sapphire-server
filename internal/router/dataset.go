@@ -6,6 +6,7 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/service"
 	"strconv"
 )
 
@@ -24,9 +25,11 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	return router
 }
 
+var datasetService = service.NewDatasetService()
+
 // HandleList 获取公开且未删除的数据集
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
-	datasets, _ := dao.FindAll[domain.Dataset]("is_public = ? AND is_deleted = ?", true, false)
+	datasets := datasetService.GetDatasetList()
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
