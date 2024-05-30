@@ -14,13 +14,14 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `gorm:"column:name"`
-	Password string `gorm:"column:password"`
-	Email    string `gorm:"column:email"`
-	Uid      string `gorm:"column:uid"`
-	Avatar   string `gorm:"column:avatar"`
-	Role     int    `gorm:"column:role"`
-	Score    int    `gorm:"column:score"`
+	Name string `gorm:"column:name" json:"name"`
+	// 序列化为 JSON 时忽略字段
+	Password string `gorm:"column:password" json:"-"`
+	Email    string `gorm:"column:email" json:"email"`
+	Uid      string `gorm:"column:uid" json:"uid"`
+	Avatar   string `gorm:"column:avatar" json:"avatar"`
+	Role     int    `gorm:"column:role" json:"role"`
+	Score    int    `gorm:"column:score" json:"score"`
 }
 
 type UserRole struct {
@@ -32,16 +33,16 @@ func NewUser() *User {
 	return &User{}
 }
 
-func (u *User) Register(register dto.Register) (token string, err error) {
+func (u *User) Register(register dto.Register) (token string, user *User, err error) {
 	// 检查是否有重名用户
 	existedUser := u.loadUser(map[string]interface{}{"name": register.Name})
 	if existedUser != nil {
-		return "", errors.New("existed user")
+		return "", nil, errors.New("existed user")
 	}
 
 	encryptedPasswd, err := u.hashPassword(register.Passwd)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	// 插入用户
@@ -50,7 +51,7 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 	if u.isValidEmail(register.Email) {
 		u.Email = register.Email
 	} else {
-		return "", errors.New("invalid email")
+		return "", nil, errors.New("invalid email")
 	}
 	// TODO: 生成 UID
 	u.Uid = strconv.FormatInt(time.Now().Unix(), 10)
@@ -59,27 +60,27 @@ func (u *User) Register(register dto.Register) (token string, err error) {
 	// 默认给普通用户权限
 	role, err := u.FindRoleIdByRoleName("USER")
 	if err != nil {
-		return "", err
+		return "", nil, err
 	} else {
 		u.Role = role
 	}
 
 	err = dao.Save(u)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	// 生成 token
 	token = util.GenerateJWT(u.ID)
 
-	return token, nil
+	return token, nil, nil
 }
 
-func (u *User) Login(login dto.Login) (token string, err error) {
+func (u *User) Login(login dto.Login) (token string, user *User, err error) {
 	// 读取用户
-	user := u.loadUser(map[string]interface{}{"name": login.Name})
+	user = u.loadUser(map[string]interface{}{"name": login.Name})
 	if user == nil {
-		return "", errors.New("user not found")
+		return "", nil, errors.New("user not found")
 	}
 	// Redis DEMO
 	// infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
@@ -87,13 +88,13 @@ func (u *User) Login(login dto.Login) (token string, err error) {
 
 	err = user.verifyPassword(user.Password, login.Passwd)
 	if err != nil {
-		return "", errors.New("wrong password")
+		return "", nil, errors.New("密码错误")
 	}
 
 	// 生成 token
 	token = util.GenerateJWT(user.ID)
 
-	return token, nil
+	return token, user, nil
 }
 
 func (u *User) loadUser(param map[string]interface{}) *User {
