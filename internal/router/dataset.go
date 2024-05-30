@@ -35,8 +35,9 @@ func (t *DatasetRouter) HandleList(ctx *gin.Context) {
 
 // HandleMyList 获取用户创建的数据集
 func (t *DatasetRouter) HandleMyList(ctx *gin.Context) {
+	// TODO: 从token中获取用户ID
 	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
-	datasets, _ := dao.FindAll[domain.Dataset]("creator_id = ?", creatorID)
+	datasets := datasetService.GetMyDatasetList(creatorID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 

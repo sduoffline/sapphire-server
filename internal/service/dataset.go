@@ -45,6 +45,7 @@ func newDatasetResult(dataset *domain.Dataset) *DatasetResult {
 
 var datasetDomain = domain.NewDataset()
 
+// GetDatasetList 获取数据集列表
 func (service *DatasetService) GetDatasetList() []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetList()
@@ -53,11 +54,45 @@ func (service *DatasetService) GetDatasetList() []*DatasetResult {
 		return make([]*DatasetResult, 0)
 	}
 
+	results := service.buildResultList(datasets)
+
+	return results
+}
+
+// GetMyDatasetList 获取用户创建的数据集列表
+func (service *DatasetService) GetMyDatasetList(creatorID int) []*DatasetResult {
+	var err error
+	datasets, err := datasetDomain.GetDatasetListByUserID(creatorID)
+	if err != nil {
+		// 返回空列表
+		return make([]*DatasetResult, 0)
+	}
+
+	results := service.buildResultList(datasets)
+
+	return results
+}
+
+// 将 domain.Dataset 转换为 DatasetResult 的列表
+func (service *DatasetService) buildResultList(datasets []domain.Dataset) []*DatasetResult {
 	results := make([]*DatasetResult, 0)
 	for _, dataset := range datasets {
 		result := newDatasetResult(&dataset)
 		results = append(results, result)
 	}
-
 	return results
 }
+
+// 将 domain.Dataset 转换为 DatasetResult，包含数据集的数据
+//func (service *DatasetService) buildResult(dataset domain.Dataset, datas []domain.DatasetData) *DatasetResult {
+//	result := newDatasetResult(&dataset)
+//	result.Datas = make([]DatasetItem, 0)
+//	for _, data := range datas {
+//		result.Datas = append(result.Datas, DatasetItem{
+//			ImgUrl:       data.ImgUrl,
+//			EmbeddingUrl: data.EmbeddingUrl,
+//			Id:           data.ID,
+//		})
+//	}
+//	return result
+//}
