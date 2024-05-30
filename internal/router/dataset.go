@@ -3,10 +3,12 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"sapphire-server/internal/service"
+	"sapphire-server/pkg/util"
 	"strconv"
 )
 
@@ -21,6 +23,8 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	datasetGroup.GET("/joined/list", router.HandleJoinedList)
 	datasetGroup.GET("/user/list", router.HandleList)
 	datasetGroup.POST("/create", router.HandleCreate)
+	datasetGroup.POST("/update/:id", router.HandleUpdateImg)
+
 	datasetGroup.POST("/delete", router.HandleDelete)
 	datasetGroup.POST("/register", router.HandleRegister)
 	datasetGroup.GET("/:id", router.HandleGetByID)
@@ -119,6 +123,43 @@ func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 	dataset.ID = uint(datasetID)
 	dataset.DeleteDataset()
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+}
+
+// HandleUpdateImg 上传图片
+func (t *DatasetRouter) HandleUpdateImg(ctx *gin.Context) {
+	var err error
+	// 读取dataset id
+	_, err = strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+
+	// 读取表单的文件
+	file, err := ctx.FormFile("file")
+
+	// 将文件保存到本地
+	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 解压缩文件
+	// 先将文件读取为[]byte
+	bytes, err := os.ReadFile("./" + file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+	err = util.Unzip(bytes, "./")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+	return
 }
 
 // HandleRegister 注册图片
