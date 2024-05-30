@@ -4,18 +4,19 @@ import (
 	"gorm.io/gorm"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
+	"time"
 )
 
 type Dataset struct {
 	gorm.Model
-	Name        string `gorm:"column:name"`
-	CreatorID   int    `gorm:"column:creator_id"`
-	Description string `gorm:"column:description"`
-	TypeID      int    `gorm:"column:type_id"`
-	Format      string `gorm:"column:format"`
-	Size        int    `gorm:"column:size"`
-	IsPublic    bool   `gorm:"column:is_public"`
-	IsDeleted   bool   `gorm:"column:is_deleted"`
+	Name        string    `gorm:"column:name"`
+	CreatorID   int       `gorm:"column:creator_id"`
+	Description string    `gorm:"column:description"`
+	TypeID      int       `gorm:"column:type_id"`
+	Format      string    `gorm:"column:format"`
+	Size        int       `gorm:"column:size"`
+	Schedule    time.Time `gorm:"column:schedule"`
+	IsPublic    bool      `gorm:"column:is_public"`
 }
 
 type DatasetType struct {
@@ -31,24 +32,30 @@ type ImgDataset struct {
 	EmbeddingUrl string `gorm:"column:embedding_url"`
 }
 
-func NewDataset() *Dataset {
+func NewDatasetDomain() *Dataset {
 	return &Dataset{}
 }
 
 // CreateDataset 创建数据集
-func (d *Dataset) CreateDataset(dataset dto.NewDataset) {
-	d.Name = dataset.Name
-	d.CreatorID = dataset.CreatorID
-	d.Description = dataset.Description
-	d.TypeID = dataset.TypeID
-	d.Format = dataset.Format
-	d.Size = dataset.Size
-	d.IsPublic = dataset.IsPublic
-	d.IsDeleted = dataset.IsDeleted
-	err := dao.Save(d)
-	if err != nil {
-		return
+func (d *Dataset) CreateDataset(creatorId int, dto dto.NewDataset) (*Dataset, error) {
+	datasetInfo := &Dataset{
+		Name:        dto.DatasetName,
+		CreatorID:   creatorId,
+		Description: dto.TaskInfo,
 	}
+
+	scheduleTime := time.Now()
+	if dto.Schedule != "" {
+		scheduleTime, _ = time.Parse("2006-01-02 15:04:05", dto.Schedule)
+
+	}
+	datasetInfo.Schedule = scheduleTime
+
+	err := dao.Save(datasetInfo)
+	if err != nil {
+		return nil, err
+	}
+	return datasetInfo, nil
 }
 
 // DeleteDataset 删除数据集

@@ -29,7 +29,7 @@ type DatasetResult struct {
 	Finished    int           `json:"finished"`
 }
 
-func newDatasetResult(dataset *domain.Dataset) *DatasetResult {
+func NewDatasetResult(dataset *domain.Dataset) *DatasetResult {
 	return &DatasetResult{
 		DatasetId:   int(dataset.ID),
 		DatasetName: dataset.Name,
@@ -51,7 +51,7 @@ func newDatasetItem(data *domain.ImgDataset) DatasetItem {
 	}
 }
 
-var datasetDomain = domain.NewDataset()
+var datasetDomain = domain.NewDatasetDomain()
 
 // GetDatasetList 获取数据集列表
 func (service *DatasetService) GetDatasetList() []*DatasetResult {
@@ -91,7 +91,7 @@ func (service *DatasetService) GetDatasetDetail(id int) *DatasetResult {
 		return nil
 	}
 
-	result := newDatasetResult(dataset)
+	result := NewDatasetResult(dataset)
 	result.Datas = make([]DatasetItem, 0)
 	for _, data := range datas {
 		result.Datas = append(result.Datas, newDatasetItem(&data))
@@ -104,7 +104,7 @@ func (service *DatasetService) GetDatasetDetail(id int) *DatasetResult {
 func (service *DatasetService) buildResultList(datasets []domain.Dataset) []*DatasetResult {
 	results := make([]*DatasetResult, 0)
 	for _, dataset := range datasets {
-		result := newDatasetResult(&dataset)
+		result := NewDatasetResult(&dataset)
 		results = append(results, result)
 	}
 	return results
@@ -112,7 +112,7 @@ func (service *DatasetService) buildResultList(datasets []domain.Dataset) []*Dat
 
 // 将 domain.Dataset 转换为 DatasetResult，包含数据集的数据
 //func (service *DatasetService) buildResult(dataset domain.Dataset, datas []domain.DatasetData) *DatasetResult {
-//	result := newDatasetResult(&dataset)
+//	result := NewDatasetResult(&dataset)
 //	result.Datas = make([]DatasetItem, 0)
 //	for _, data := range datas {
 //		result.Datas = append(result.Datas, DatasetItem{

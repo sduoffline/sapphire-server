@@ -43,61 +43,38 @@ func (t *DatasetRouter) HandleMyList(ctx *gin.Context) {
 
 // HandleCreate 创建数据集
 func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
-	name := ctx.PostForm("name")
-	creatorID, _ := strconv.Atoi(ctx.PostForm("creator_id"))
-	typeID, _ := strconv.Atoi(ctx.PostForm("type_id"))
-
+	// TODO: 从token中获取用户ID
+	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
 	// 做个creatorID的校验
-	res, err := dao.First[domain.User]("id = ?", creatorID)
-	if res == nil || err != nil {
-		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("creator_id is invalid"))
+	//res, err := dao.First[domain.User]("id = ?", creatorID)
+	//if res == nil || err != nil {
+	//	ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("creator_id is invalid"))
+	//	return
+	//}
+
+	// 提取请求体到 NewDataset 结构体
+	body := dto.NewDataset{}
+	if err := ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
 
-	var description string
-	if desc := ctx.PostForm("description"); desc != "" {
-		description = desc
+	// 创建数据集
+	dataset, err := domain.NewDatasetDomain().CreateDataset(creatorID, body)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
 	}
 
-	var format string
-	if fmt := ctx.PostForm("format"); fmt != "" {
-		format = fmt
-	}
-
-	var size int
-	if szStr := ctx.PostForm("size"); szStr != "" {
-		size, _ = strconv.Atoi(szStr)
-	}
-
-	var isPublic bool
-	if isPubStr := ctx.PostForm("is_public"); isPubStr != "" {
-		isPublic, _ = strconv.ParseBool(isPubStr)
-	}
-
-	var isDeleted bool
-	if isDelStr := ctx.PostForm("is_deleted"); isDelStr != "" {
-		isDeleted, _ = strconv.ParseBool(isDelStr)
-	}
-
-	datasetInfo := dto.NewDataset{
-		Name:        name,
-		CreatorID:   creatorID,
-		TypeID:      typeID,
-		Description: description,
-		Format:      format,
-		Size:        size,
-		IsPublic:    isPublic,
-		IsDeleted:   isDeleted,
-	}
-
-	NewDataset := domain.NewDataset()
-	NewDataset.CreateDataset(datasetInfo)
+	// 返回创建的数据集
+	res := datasetService.GetDatasetDetail(int(dataset.ID))
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
 // HandleDelete 删除数据集
 func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Query("dataset_id"))
-	dataset := domain.NewDataset()
+	dataset := domain.NewDatasetDomain()
 	dataset.ID = uint(datasetID)
 	dataset.DeleteDataset()
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
