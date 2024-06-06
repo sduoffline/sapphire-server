@@ -55,7 +55,7 @@ func newDatasetItem(data *domain.ImgDataset) DatasetItem {
 var datasetDomain = domain.NewDatasetDomain()
 
 // GetAllDatasetList 获取数据集列表
-func (service *DatasetService) GetAllDatasetList(userID int) []*DatasetResult {
+func (service *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetList()
 	if err != nil {
@@ -93,7 +93,7 @@ func (service *DatasetService) GetAllDatasetList(userID int) []*DatasetResult {
 }
 
 // GetUserCreatedDatasetList 获取用户创建的数据集列表
-func (service *DatasetService) GetUserCreatedDatasetList(creatorID int) []*DatasetResult {
+func (service *DatasetService) GetUserCreatedDatasetList(creatorID uint) []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetListByUserID(creatorID)
 	if err != nil {
@@ -107,7 +107,7 @@ func (service *DatasetService) GetUserCreatedDatasetList(creatorID int) []*Datas
 }
 
 // GetUserJoinedDatasetList 获取用户加入的数据集列表
-func (service *DatasetService) GetUserJoinedDatasetList(userID int) []*DatasetResult {
+func (service *DatasetService) GetUserJoinedDatasetList(userID uint) []*DatasetResult {
 	datasets, err := datasetDomain.ListUserJoinedDatasetList(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
@@ -119,7 +119,7 @@ func (service *DatasetService) GetUserJoinedDatasetList(userID int) []*DatasetRe
 }
 
 // GetUserDatasetList 获取用户的数据集列表
-func (service *DatasetService) GetUserDatasetList(userID int) []*DatasetResult {
+func (service *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult {
 	createdDatasets, err := datasetDomain.GetDatasetListByUserID(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
@@ -150,7 +150,7 @@ func (service *DatasetService) GetUserDatasetList(userID int) []*DatasetResult {
 }
 
 // GetDatasetDetail 获取数据集详情
-func (service *DatasetService) GetDatasetDetail(userId int, id int) *DatasetResult {
+func (service *DatasetService) GetDatasetDetail(userId uint, id uint) *DatasetResult {
 	dataset, err := datasetDomain.GetDatasetByID(id)
 	if err != nil {
 		return nil

@@ -24,7 +24,7 @@ var annotationDomain = domain.NewAnnotationDomain()
 func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Param("set_id"))
 	size, _ := strconv.Atoi(ctx.Query("size"))
-	images, err := datasetDomain.GetImgByDatasetID(datasetID, size)
+	images, err := datasetDomain.GetImgByDatasetID(uint(datasetID), size)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "get images failed"})
 		return

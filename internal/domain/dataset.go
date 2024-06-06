@@ -10,7 +10,7 @@ import (
 type Dataset struct {
 	gorm.Model
 	Name        string    `gorm:"column:name"`
-	CreatorID   int       `gorm:"column:creator_id"`
+	CreatorID   uint      `gorm:"column:creator_id"`
 	Description string    `gorm:"column:description"`
 	TypeID      int       `gorm:"column:type_id"`
 	Format      string    `gorm:"column:format"`
@@ -28,14 +28,14 @@ type DatasetType struct {
 type ImgDataset struct {
 	gorm.Model
 	ImgUrl       string `gorm:"column:img_url" json:"imgUrl"`
-	DatasetId    int    `gorm:"column:dataset_id" json:"datasetId"`
+	DatasetId    uint   `gorm:"column:dataset_id" json:"datasetId"`
 	EmbeddingUrl string `gorm:"column:embedding_url" json:"embeddingUrl"`
 }
 
 type DatasetUser struct {
 	gorm.Model
-	UserID    int `gorm:"column:user_id"`
-	DatasetID int `gorm:"column:dataset_id"`
+	UserID    uint `gorm:"column:user_id"`
+	DatasetID uint `gorm:"column:dataset_id"`
 }
 
 func NewDatasetDomain() *Dataset {
@@ -43,7 +43,7 @@ func NewDatasetDomain() *Dataset {
 }
 
 // AddUserToDataset 添加用户到数据集
-func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
+func (d *Dataset) AddUserToDataset(userID uint, datasetID uint) error {
 	var err error
 	exist, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
 	if err != nil {
@@ -66,7 +66,7 @@ func (d *Dataset) AddUserToDataset(userID int, datasetID int) error {
 }
 
 // RemoveUserFromDataset 移除用户从数据集
-func (d *Dataset) RemoveUserFromDataset(userID int, datasetID int) error {
+func (d *Dataset) RemoveUserFromDataset(userID uint, datasetID uint) error {
 	var err error
 	record, err := dao.First[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
 	if err != nil {
@@ -84,7 +84,7 @@ func (d *Dataset) RemoveUserFromDataset(userID int, datasetID int) error {
 }
 
 // IsUserClaimDataset 判断用户是否拥有数据集
-func (d *Dataset) IsUserClaimDataset(userID int, datasetID int) bool {
+func (d *Dataset) IsUserClaimDataset(userID uint, datasetID uint) bool {
 	record, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)
 	if err != nil {
 		return false
@@ -96,7 +96,7 @@ func (d *Dataset) IsUserClaimDataset(userID int, datasetID int) bool {
 }
 
 // CreateDataset 创建数据集
-func (d *Dataset) CreateDataset(creatorId int, dto dto.NewDataset) (*Dataset, error) {
+func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, error) {
 	datasetInfo := &Dataset{
 		Name:        dto.DatasetName,
 		CreatorID:   creatorId,
@@ -126,7 +126,7 @@ func (d *Dataset) DeleteDataset() {
 }
 
 // GetDatasetByID 根据 ID 获取数据集
-func (d *Dataset) GetDatasetByID(id int) (*Dataset, error) {
+func (d *Dataset) GetDatasetByID(id uint) (*Dataset, error) {
 	res, err := dao.First[Dataset]("id = ?", id)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (d *Dataset) GetDatasetList() ([]Dataset, error) {
 	return res, nil
 }
 
-func (d *Dataset) ListUserJoinedDatasetList(userID int) ([]Dataset, error) {
+func (d *Dataset) ListUserJoinedDatasetList(userID uint) ([]Dataset, error) {
 	res, err := dao.Query[Dataset]("select * from datasets where id in (select dataset_id from dataset_users where user_id = ?)", userID)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (d *Dataset) ListUserJoinedDatasetList(userID int) ([]Dataset, error) {
 }
 
 // GetDatasetListByUserID 根据用户 ID 获取数据集列表
-func (d *Dataset) GetDatasetListByUserID(createdID int) ([]Dataset, error) {
+func (d *Dataset) GetDatasetListByUserID(createdID uint) ([]Dataset, error) {
 	res, err := dao.FindAll[Dataset]("creator_id = ?", createdID)
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func (d *Dataset) GetDatasetListByUserID(createdID int) ([]Dataset, error) {
 }
 
 // GetDatasetTypeByID 根据 ID 获取数据集类型
-func (d *Dataset) GetDatasetTypeByID(id int) (*DatasetType, error) {
+func (d *Dataset) GetDatasetTypeByID(id uint) (*DatasetType, error) {
 	res, err := dao.First[DatasetType]("id = ?", id)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (d *Dataset) GetDatasetTypeByID(id int) (*DatasetType, error) {
 }
 
 // RegisterImage 注册图片
-func (d *Dataset) RegisterImage(imgUrl string, datasetID int) {
+func (d *Dataset) RegisterImage(imgUrl string, datasetID uint) {
 	img := &ImgDataset{
 		ImgUrl:    imgUrl,
 		DatasetId: datasetID,
@@ -182,7 +182,7 @@ func (d *Dataset) RegisterImage(imgUrl string, datasetID int) {
 }
 
 // GetDatasetDataList 获取数据集数据列表
-func (d *Dataset) GetDatasetDataList(id int) ([]ImgDataset, error) {
+func (d *Dataset) GetDatasetDataList(id uint) ([]ImgDataset, error) {
 	res, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)
 	if err != nil {
 		return nil, err
@@ -190,7 +190,7 @@ func (d *Dataset) GetDatasetDataList(id int) ([]ImgDataset, error) {
 	return res, nil
 }
 
-func (d *Dataset) GetImgByDatasetID(id int, size int) ([]ImgDataset, error) {
+func (d *Dataset) GetImgByDatasetID(id uint, size int) ([]ImgDataset, error) {
 	res, err := dao.Query[ImgDataset]("select * from img_datasets where dataset_id = ? limit ?", id, size)
 	if err != nil {
 		return nil, err

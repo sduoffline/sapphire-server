@@ -25,9 +25,9 @@ func main() {
 
 	// init gin
 	engine := gin.Default()
-	//engine.Use(gin.Logger())
-	//engine.Use(gin.Recovery())
-	engine.Use(middleware.AuthMiddleware())
+	engine.Use(gin.Logger())
+	engine.Use(gin.Recovery())
+	//engine.Use(middleware.AuthMiddleware())
 	// init http routes
 	engine.Use(middleware.Cors())
 

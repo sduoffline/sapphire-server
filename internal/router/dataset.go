@@ -7,6 +7,7 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/middleware"
 	"sapphire-server/internal/service"
 	"sapphire-server/pkg/util"
 	"strconv"
@@ -22,15 +23,26 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	datasetGroup.GET("/created/list", router.HandleCreatedList)
 	datasetGroup.GET("/joined/list", router.HandleJoinedList)
 	datasetGroup.GET("/user/list", router.HandleUserList)
-	datasetGroup.POST("/create", router.HandleCreate)
-	datasetGroup.POST("/update/:id", router.HandleUpdateImg)
 
-	datasetGroup.POST("/delete", router.HandleDelete)
-	datasetGroup.POST("/register", router.HandleRegister)
-	datasetGroup.GET("/:id", router.HandleGetByID)
-
-	datasetGroup.POST("/join/:id", router.HandleJoin)
-	datasetGroup.POST("/quit/:id", router.HandleQuit)
+	authRouter := datasetGroup.Group("/").Use(middleware.AuthMiddleware())
+	{
+		authRouter.POST("/create", router.HandleCreate)
+		authRouter.POST("/upload/:id", router.HandleUploadImg)
+		authRouter.POST("/delete", router.HandleDelete)
+		//authRouter.POST("/register", router.HandleRegister)
+		authRouter.GET("/:id", router.HandleGetByID)
+		authRouter.POST("/join/:id", router.HandleJoin)
+		authRouter.POST("/quit/:id", router.HandleQuit)
+	}
+	//datasetGroup.POST("/create", router.HandleCreate).Use(middleware.AuthMiddleware())
+	//datasetGroup.POST("/upload/:id", router.HandleUploadImg).Use(middleware.AuthMiddleware())
+	//
+	//datasetGroup.POST("/delete", router.HandleDelete).Use(middleware.AuthMiddleware())
+	//datasetGroup.POST("/register", router.HandleRegister)
+	//datasetGroup.GET("/:id", router.HandleGetByID).Use(middleware.AuthMiddleware())
+	//
+	//datasetGroup.POST("/join/:id", router.HandleJoin).Use(middleware.AuthMiddleware())
+	//datasetGroup.POST("/quit/:id", router.HandleQuit).Use(middleware.AuthMiddleware())
 	return router
 }
 
@@ -38,7 +50,7 @@ var datasetService = service.NewDatasetService()
 
 // HandleList 获取公开且未删除的数据集
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
-	userID, _ := strconv.Atoi(ctx.Query("user_id"))
+	userID := ctx.Keys["id"].(uint)
 
 	datasets := datasetService.GetAllDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
@@ -46,22 +58,21 @@ func (t *DatasetRouter) HandleList(ctx *gin.Context) {
 
 // HandleCreatedList 获取用户创建的数据集
 func (t *DatasetRouter) HandleCreatedList(ctx *gin.Context) {
-	// TODO: 从token中获取用户ID
-	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
-	datasets := datasetService.GetUserCreatedDatasetList(creatorID)
+	userID := ctx.Keys["id"].(uint)
+	datasets := datasetService.GetUserCreatedDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
 // HandleJoinedList 获取用户加入的数据集
 func (t *DatasetRouter) HandleJoinedList(ctx *gin.Context) {
-	createID, _ := strconv.Atoi(ctx.Query("creator_id"))
-	datasets := datasetService.GetUserJoinedDatasetList(createID)
+	userID := ctx.Keys["id"].(uint)
+	datasets := datasetService.GetUserJoinedDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
 // HandleUserList 获取用户创建的数据集
 func (t *DatasetRouter) HandleUserList(ctx *gin.Context) {
-	userID, _ := strconv.Atoi(ctx.Query("user_id"))
+	userID := ctx.Keys["id"].(uint)
 	datasets := datasetService.GetUserDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
@@ -75,13 +86,9 @@ func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
 		return
 	}
-	creatorID, err := strconv.Atoi(ctx.Query("creator_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid creator id"))
-		return
-	}
+	creatorID := ctx.Keys["id"].(uint)
 
-	err = domain.NewDatasetDomain().AddUserToDataset(creatorID, setID)
+	err = domain.NewDatasetDomain().AddUserToDataset(creatorID, uint(setID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
@@ -98,13 +105,9 @@ func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
 		return
 	}
-	creatorID, err := strconv.Atoi(ctx.Query("creator_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid creator id"))
-		return
-	}
+	creatorID := ctx.Keys["id"].(uint)
 
-	err = domain.NewDatasetDomain().RemoveUserFromDataset(creatorID, setID)
+	err = domain.NewDatasetDomain().RemoveUserFromDataset(creatorID, uint(setID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
@@ -114,8 +117,9 @@ func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 
 // HandleCreate 创建数据集
 func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
+	var err error
 	// TODO: 从token中获取用户ID
-	creatorID, _ := strconv.Atoi(ctx.Query("creator_id"))
+	creatorID := ctx.Keys["id"].(uint)
 	// 做个creatorID的校验
 	//res, err := dao.First[domain.User]("id = ?", creatorID)
 	//if res == nil || err != nil {
@@ -138,7 +142,7 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	}
 
 	// 返回创建的数据集
-	res := datasetService.GetDatasetDetail(creatorID, int(dataset.ID))
+	res := datasetService.GetDatasetDetail(creatorID, dataset.ID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
@@ -151,8 +155,8 @@ func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
-// HandleUpdateImg 上传图片
-func (t *DatasetRouter) HandleUpdateImg(ctx *gin.Context) {
+// HandleUploadImg 上传图片
+func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	var err error
 	// 读取dataset id
 	_, err = strconv.Atoi(ctx.Param("id"))
@@ -163,6 +167,11 @@ func (t *DatasetRouter) HandleUpdateImg(ctx *gin.Context) {
 
 	// 读取表单的文件
 	file, err := ctx.FormFile("file")
+	// 检查文件是否存在
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("文件不存在"))
+		return
+	}
 
 	// 将文件保存到本地
 	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
@@ -188,7 +197,7 @@ func (t *DatasetRouter) HandleUpdateImg(ctx *gin.Context) {
 	return
 }
 
-// HandleRegister 注册图片
+// Deprecated: HandleRegister 注册图片
 func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 	imgUrl := ctx.PostForm("img_url")
 	datasetId, _ := strconv.Atoi(ctx.PostForm("dataset_id"))
@@ -198,14 +207,21 @@ func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse("dataset not found"))
 		return
 	}
-	dataset.RegisterImage(imgUrl, datasetId)
+	dataset.RegisterImage(imgUrl, uint(datasetId))
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
 // HandleGetByID 根据 ID 获取数据集
 func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
-	datasetID, _ := strconv.Atoi(ctx.Param("id"))
-	userID, _ := strconv.Atoi(ctx.Query("user_id"))
-	dataset := datasetService.GetDatasetDetail(userID, datasetID)
+	var err error
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+
+	userID, _ := ctx.Keys["id"].(uint)
+	dataset := datasetService.GetDatasetDetail(userID, uint(datasetID))
+
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(dataset))
 }
