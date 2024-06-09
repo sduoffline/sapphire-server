@@ -1,7 +1,9 @@
 package dto
 
 type NewDataset struct {
-	DatasetName string `json:"dataSetName"`
-	TaskInfo    string `json:"taskInfo"`
-	Schedule    string `json:"schedule"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	EndTime     string   `json:"endTime"`
+	Cover       string   `json:"cover"`
+	Tags        []string `json:"tags"`
 }

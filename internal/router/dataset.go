@@ -118,7 +118,6 @@ func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 // HandleCreate 创建数据集
 func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	var err error
-	// TODO: 从token中获取用户ID
 	creatorID := ctx.Keys["id"].(uint)
 	// 做个creatorID的校验
 	//res, err := dao.First[domain.User]("id = ?", creatorID)

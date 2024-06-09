@@ -1,6 +1,9 @@
 package service
 
-import "sapphire-server/internal/domain"
+import (
+	"sapphire-server/internal/domain"
+	"strings"
+)
 
 type DatasetService struct {
 }
@@ -16,7 +19,7 @@ type DatasetItem struct {
 }
 
 type DatasetResult struct {
-	DatasetId   int           `json:"dataSetId"`
+	DatasetId   uint          `json:"dataSetId"`
 	DatasetName string        `json:"dataSetName"`
 	TaskInfo    string        `json:"taskInfo"`
 	ObjectCnt   int           `json:"objectCnt"`
@@ -30,15 +33,27 @@ type DatasetResult struct {
 }
 
 func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *DatasetResult {
+	objects := make([]string, 0)
+	if dataset.Tags != "" {
+		tags := strings.Split(dataset.Tags, ",")
+		for _, tag := range tags {
+			if strings.TrimSpace(tag) == "" {
+				continue
+			} else {
+				objects = append(objects, tag)
+			}
+		}
+	}
+
 	return &DatasetResult{
-		DatasetId:   int(dataset.ID),
+		DatasetId:   dataset.ID,
 		DatasetName: dataset.Name,
 		TaskInfo:    dataset.Description,
-		ObjectCnt:   3,
-		Objects:     []string{"红帽子", "蓝帽子", "绿帽子"},
+		ObjectCnt:   len(objects),
+		Objects:     objects,
 		Owner:       isOwner,
 		Claim:       isClaim,
-		Schedule:    dataset.Schedule.Format("2006-01-02 15:04:05"),
+		Schedule:    dataset.EndTime.Format("2006-01-02 15:04:05"),
 		Total:       0,
 		Finished:    0,
 	}
@@ -135,7 +150,7 @@ func (service *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult 
 	// 创建一个新的列表，用于存储用户创建的数据集和加入的数据集
 	// 同时创建一个map检查是否有重复的数据集
 	results := make([]*DatasetResult, 0)
-	datasetIdMap := make(map[int]bool)
+	datasetIdMap := make(map[uint]bool)
 	allDatasets := append(createdResults, joinedResults...)
 	for _, result := range allDatasets {
 		// 当数据集ID已经存在时，跳过

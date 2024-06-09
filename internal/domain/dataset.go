@@ -12,11 +12,18 @@ type Dataset struct {
 	Name        string    `gorm:"column:name"`
 	CreatorID   uint      `gorm:"column:creator_id"`
 	Description string    `gorm:"column:description"`
+	Cover       string    `gorm:"column:cover"`
 	TypeID      int       `gorm:"column:type_id"`
 	Format      string    `gorm:"column:format"`
+	Tags        string    `gorm:"column:tags"`
 	Size        int       `gorm:"column:size"`
-	Schedule    time.Time `gorm:"column:schedule"`
+	EndTime     time.Time `gorm:"column:end_time"`
 	IsPublic    bool      `gorm:"column:is_public"`
+}
+
+type DatasetTag struct {
+	gorm.Model
+	Tag string `gorm:"column:tag"`
 }
 
 type DatasetType struct {
@@ -97,18 +104,27 @@ func (d *Dataset) IsUserClaimDataset(userID uint, datasetID uint) bool {
 
 // CreateDataset 创建数据集
 func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, error) {
+	// 创建数据集记录
 	datasetInfo := &Dataset{
-		Name:        dto.DatasetName,
+		Name:        dto.Name,
 		CreatorID:   creatorId,
-		Description: dto.TaskInfo,
+		Description: dto.Description,
+		Cover:       dto.Cover,
 	}
 
 	scheduleTime := time.Now()
-	if dto.Schedule != "" {
-		scheduleTime, _ = time.Parse("2006-01-02 15:04:05", dto.Schedule)
-
+	if dto.EndTime != "" {
+		scheduleTime, _ = time.Parse("2006-01-02 15:04:05", dto.EndTime)
 	}
-	datasetInfo.Schedule = scheduleTime
+	datasetInfo.EndTime = scheduleTime
+
+	// 添加标注tag的记录
+	tags := dto.Tags
+	tagStr := ""
+	for _, tag := range tags {
+		tagStr += tag + ","
+	}
+	datasetInfo.Tags = tagStr
 
 	err := dao.Save(datasetInfo)
 	if err != nil {
