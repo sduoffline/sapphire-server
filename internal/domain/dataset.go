@@ -150,6 +150,16 @@ func (d *Dataset) GetDatasetByID(id uint) (*Dataset, error) {
 	return res, nil
 }
 
+// GetResultArchive 获取结果归档
+// TODO: 未实现
+func (d *Dataset) GetResultArchive(id uint) (string, error) {
+	_, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)
+	if err != nil {
+		return "", err
+	}
+	return "", nil
+}
+
 // GetDatasetList 获取数据集列表
 func (d *Dataset) GetDatasetList() ([]Dataset, error) {
 	res, err := dao.FindAll[Dataset]()

@@ -28,21 +28,13 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	{
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
+		authRouter.POST("/download/:id", router.HandleDownloadDataset)
 		authRouter.POST("/delete", router.HandleDelete)
 		//authRouter.POST("/register", router.HandleRegister)
 		authRouter.GET("/:id", router.HandleGetByID)
 		authRouter.POST("/join/:id", router.HandleJoin)
 		authRouter.POST("/quit/:id", router.HandleQuit)
 	}
-	//datasetGroup.POST("/create", router.HandleCreate).Use(middleware.AuthMiddleware())
-	//datasetGroup.POST("/upload/:id", router.HandleUploadImg).Use(middleware.AuthMiddleware())
-	//
-	//datasetGroup.POST("/delete", router.HandleDelete).Use(middleware.AuthMiddleware())
-	//datasetGroup.POST("/register", router.HandleRegister)
-	//datasetGroup.GET("/:id", router.HandleGetByID).Use(middleware.AuthMiddleware())
-	//
-	//datasetGroup.POST("/join/:id", router.HandleJoin).Use(middleware.AuthMiddleware())
-	//datasetGroup.POST("/quit/:id", router.HandleQuit).Use(middleware.AuthMiddleware())
 	return router
 }
 
@@ -223,4 +215,31 @@ func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 	dataset := datasetService.GetDatasetDetail(userID, uint(datasetID))
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(dataset))
+}
+
+// HandleDownloadDataset 下载数据集
+func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
+	var err error
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+
+	// 先读出数据集
+	//userID, _ := ctx.Keys["id"].(uint)
+	//dataset := datasetService.GetDatasetDetail(userID, uint(datasetID))
+
+	// 默认下载所有数据
+	url, err := datasetDomain.GetResultArchive(uint(datasetID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 使用map包装结果
+	res := make(map[string]string)
+	res["url"] = url
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
