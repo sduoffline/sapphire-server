@@ -26,6 +26,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 
 	authRouter := datasetGroup.Group("/").Use(middleware.AuthMiddleware())
 	{
+		authRouter.POST("/query", router.HandleQuery)
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
 		authRouter.POST("/download/:id", router.HandleDownloadDataset)
@@ -242,4 +243,24 @@ func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 	res["url"] = url
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
+}
+
+// HandleQuery 查询数据集
+func (t *DatasetRouter) HandleQuery(ctx *gin.Context) {
+	var err error
+	userID := ctx.Keys["id"].(uint)
+	query := &dto.DatasetQuery{}
+	if err = ctx.BindJSON(query); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 检查排序字段是否合法
+	if query.Order != "" && query.Order != dto.OrderTime && query.Order != dto.OrderHot && query.Order != dto.OrderSize {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid order"))
+		return
+	}
+
+	datasets := datasetService.QueryDatasetList(userID, query)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }

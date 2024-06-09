@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"strings"
 )
@@ -70,7 +71,7 @@ func newDatasetItem(data *domain.ImgDataset) DatasetItem {
 var datasetDomain = domain.NewDatasetDomain()
 
 // GetAllDatasetList 获取数据集列表
-func (service *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
+func (s *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetList()
 	if err != nil {
@@ -108,7 +109,7 @@ func (service *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 }
 
 // GetUserCreatedDatasetList 获取用户创建的数据集列表
-func (service *DatasetService) GetUserCreatedDatasetList(creatorID uint) []*DatasetResult {
+func (s *DatasetService) GetUserCreatedDatasetList(creatorID uint) []*DatasetResult {
 	var err error
 	datasets, err := datasetDomain.GetDatasetListByUserID(creatorID)
 	if err != nil {
@@ -116,36 +117,36 @@ func (service *DatasetService) GetUserCreatedDatasetList(creatorID uint) []*Data
 		return make([]*DatasetResult, 0)
 	}
 
-	results := service.buildResultList(datasets, true, false)
+	results := s.buildResultList(datasets, true, false)
 
 	return results
 }
 
 // GetUserJoinedDatasetList 获取用户加入的数据集列表
-func (service *DatasetService) GetUserJoinedDatasetList(userID uint) []*DatasetResult {
+func (s *DatasetService) GetUserJoinedDatasetList(userID uint) []*DatasetResult {
 	datasets, err := datasetDomain.ListUserJoinedDatasetList(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
 	}
 
-	results := service.buildResultList(datasets, false, true)
+	results := s.buildResultList(datasets, false, true)
 
 	return results
 }
 
 // GetUserDatasetList 获取用户的数据集列表
-func (service *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult {
+func (s *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult {
 	createdDatasets, err := datasetDomain.GetDatasetListByUserID(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
 	}
-	createdResults := service.buildResultList(createdDatasets, true, false)
+	createdResults := s.buildResultList(createdDatasets, true, false)
 
 	joinedDatasets, err := datasetDomain.ListUserJoinedDatasetList(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
 	}
-	joinedResults := service.buildResultList(joinedDatasets, false, true)
+	joinedResults := s.buildResultList(joinedDatasets, false, true)
 
 	// 创建一个新的列表，用于存储用户创建的数据集和加入的数据集
 	// 同时创建一个map检查是否有重复的数据集
@@ -164,8 +165,26 @@ func (service *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult 
 	return results
 }
 
+// QueryDatasetList 查询数据集列表
+// TODO: 实现查询数据集列表的逻辑
+func (s *DatasetService) QueryDatasetList(userID uint, query *dto.DatasetQuery) []*DatasetResult {
+	//var err error
+	var datasets []domain.Dataset
+	print(query)
+	print(userID)
+
+	// 包装结果
+	var results []*DatasetResult
+	for _, dataset := range datasets {
+		result := NewDatasetResult(&dataset, false, false)
+		results = append(results, result)
+	}
+
+	return results
+}
+
 // GetDatasetDetail 获取数据集详情
-func (service *DatasetService) GetDatasetDetail(userId uint, id uint) *DatasetResult {
+func (s *DatasetService) GetDatasetDetail(userId uint, id uint) *DatasetResult {
 	dataset, err := datasetDomain.GetDatasetByID(id)
 	if err != nil {
 		return nil
@@ -187,7 +206,7 @@ func (service *DatasetService) GetDatasetDetail(userId uint, id uint) *DatasetRe
 }
 
 // 将 domain.Dataset 转换为 DatasetResult 的列表
-func (service *DatasetService) buildResultList(datasets []domain.Dataset, isOwner bool, isClaim bool) []*DatasetResult {
+func (s *DatasetService) buildResultList(datasets []domain.Dataset, isOwner bool, isClaim bool) []*DatasetResult {
 	results := make([]*DatasetResult, 0)
 	for _, dataset := range datasets {
 		result := NewDatasetResult(&dataset, isOwner, isClaim)
