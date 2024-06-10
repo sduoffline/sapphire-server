@@ -28,6 +28,7 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	authGroup := userGroup.Group("").Use(middleware.AuthMiddleware())
 	{
 		authGroup.POST("/passwd/change", router.HandleChangePasswd)
+		authGroup.POST("/info/change", router.HandleChangeInfo)
 	}
 
 	statisticGroup := userGroup.Group("/statistic")
@@ -160,4 +161,23 @@ func (u *UserRouter) HandleChangePasswd(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+}
+
+// HandleChangeInfo 修改用户信息
+func (u *UserRouter) HandleChangeInfo(ctx *gin.Context) {
+	var err error
+	userId := ctx.Keys["id"].(uint)
+	body := dto.ChangeUserInfo{}
+	if err = ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	user, err := userDomain.ChangeInfo(body, userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user))
 }

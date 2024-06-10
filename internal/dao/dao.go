@@ -5,7 +5,13 @@ import (
 )
 
 func Save[T any](data T) error {
-	err := infra.Insert(data)
+	var err error
+	// 根据有无id字段判断是插入还是更新
+	if infra.HasID(data) {
+		err = infra.Update(data)
+	} else {
+		err = infra.Insert(data)
+	}
 	if err != nil {
 		return err
 	}

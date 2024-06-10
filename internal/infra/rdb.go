@@ -5,6 +5,7 @@ import (
 	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"reflect"
 	"sapphire-server/internal/conf"
 )
 
@@ -23,10 +24,47 @@ func InitDB() error {
 	return nil
 }
 
+func HasID[T any](data T) bool {
+	// 通过反射获取字段值
+	v := reflect.ValueOf(data).Elem()
+	id := v.FieldByName("ID")
+	print(id.IsValid())
+	// 判断字段是否为空
+	return id.IsValid() && !id.IsZero()
+}
+
 // Insert
 // 通过范型实现通用 Insert 函数
 func Insert[T any](data T) error {
 	res := DB.Create(&data)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
+func InsertMany[T any](data []T) error {
+	res := DB.Create(&data)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
+func InsertManyWithTransaction[T any](data []T) error {
+	tx := DB.Begin()
+	res := tx.Create(&data)
+	if res.Error != nil {
+		tx.Rollback()
+		return res.Error
+	}
+	tx.Commit()
+	return nil
+}
+
+// Update 通过范型实现通用 Update 函数
+func Update[T any](data T) error {
+	res := DB.Save(&data)
 	if res.Error != nil {
 		return res.Error
 	}

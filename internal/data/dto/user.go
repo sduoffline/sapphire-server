@@ -19,3 +19,10 @@ type ChangePasswd struct {
 	Old string `json:"old" binding:"required"`
 	New string `json:"new" binding:"required"`
 }
+
+type ChangeUserInfo struct {
+	Name        string `json:"name"`
+	Avatar      string `json:"avatar"`
+	Email       string `json:"email"`
+	Description string `json:"description"`
+}

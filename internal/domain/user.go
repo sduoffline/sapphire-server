@@ -16,12 +16,13 @@ type User struct {
 	gorm.Model
 	Name string `gorm:"column:name" json:"name"`
 	// 序列化为 JSON 时忽略字段
-	Password string `gorm:"column:password" json:"-"`
-	Email    string `gorm:"column:email" json:"email"`
-	Uid      string `gorm:"column:uid" json:"uid"`
-	Avatar   string `gorm:"column:avatar" json:"avatar"`
-	Role     int    `gorm:"column:role" json:"role"`
-	Score    int    `gorm:"column:score" json:"score"`
+	Password    string `gorm:"column:password" json:"-"`
+	Email       string `gorm:"column:email" json:"email"`
+	Uid         string `gorm:"column:uid" json:"uid"`
+	Description string `gorm:"column:description" json:"description"`
+	Avatar      string `gorm:"column:avatar" json:"avatar"`
+	Role        int    `gorm:"column:role" json:"role"`
+	Score       int    `gorm:"column:score" json:"score"`
 }
 
 type UserRole struct {
@@ -123,6 +124,33 @@ func (u *User) Login(login dto.Login) (token string, user *User, err error) {
 	token = util.GenerateJWT(user.ID)
 
 	return token, user, nil
+}
+
+func (u *User) ChangeInfo(info dto.ChangeUserInfo, userId uint) (user *User, err error) {
+	user, err = dao.First[User](userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if info.Name != "" {
+		user.Name = info.Name
+	}
+	if info.Avatar != "" {
+		user.Avatar = info.Avatar
+	}
+	if info.Email != "" {
+		user.Email = info.Email
+	}
+	if info.Description != "" {
+		user.Description = info.Description
+	}
+
+	err = dao.Save(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (u *User) loadUser(param map[string]interface{}) *User {
