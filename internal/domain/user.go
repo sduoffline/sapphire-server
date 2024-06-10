@@ -76,6 +76,34 @@ func (u *User) Register(register dto.Register) (token string, user *User, err er
 	return token, nil, nil
 }
 
+func (u *User) ChangePasswd(passwd dto.ChangePasswd, userId uint) error {
+	var err error
+	user, err := dao.First[User](userId)
+	if err != nil {
+		return err
+	}
+
+	// 验证口令
+	err = user.verifyPassword(user.Password, passwd.Old)
+	if err != nil {
+		return errors.New("password error")
+	}
+
+	// 更新密码
+	encryptedPasswd, err := u.hashPassword(passwd.New)
+	if err != nil {
+		return err
+	}
+	user.Password = encryptedPasswd
+
+	err = dao.Modify(user, "password", encryptedPasswd)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *User) Login(login dto.Login) (token string, user *User, err error) {
 	// 读取用户
 	user = u.loadUser(map[string]interface{}{"name": login.Name})

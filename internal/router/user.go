@@ -6,11 +6,14 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/middleware"
 )
 
 // UserRouter 用户路由
 type UserRouter struct {
 }
+
+var userDomain = domain.NewUser()
 
 // NewUserRouter 创建用户路由
 func NewUserRouter(engine *gin.Engine) *UserRouter {
@@ -21,6 +24,11 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	userGroup.POST("/login", router.HandleLogin)
 	userGroup.POST("/change-role", router.HandleChangeRole)
 	userGroup.GET("/profile", router.HandleProfile)
+
+	authGroup := userGroup.Group("").Use(middleware.AuthMiddleware())
+	{
+		authGroup.POST("/passwd/change", router.HandleChangePasswd)
+	}
 
 	statisticGroup := userGroup.Group("/statistic")
 	statisticGroup.GET("/credit", router.HandleCredit)
@@ -49,9 +57,8 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
-	// 由于功能简单，直接调用 domain 的方法
-	user := domain.NewUser()
-	token, user, err := user.Register(body)
+
+	token, user, err := userDomain.Register(body)
 	if err != nil {
 		if err.Error() == "existed user" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("existed user"))
@@ -63,6 +70,7 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 	// 复杂的话在 service 层处理
 	payload := map[string]interface{}{
 		"token": token,
+		"user":  user,
 	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(payload))
 }
@@ -75,9 +83,7 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	// 由于功能简单，直接调用 domain 层的方法
-	user := domain.NewUser()
-	token, user, err := user.Login(*body)
+	token, user, err := userDomain.Login(*body)
 	if err != nil {
 		if err.Error() == "wrong password" {
 			ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("wrong password"))
@@ -135,4 +141,23 @@ func (u *UserRouter) HandleCredit(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user.Score))
+}
+
+func (u *UserRouter) HandleChangePasswd(ctx *gin.Context) {
+	// 提取请求体到 Register 结构体
+	var err error
+	body := &dto.ChangePasswd{}
+	if err := ctx.BindJSON(body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+	userId := ctx.Keys["id"].(uint)
+
+	err = userDomain.ChangePasswd(*body, userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
