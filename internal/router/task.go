@@ -73,6 +73,9 @@ func (t *TaskRouter) HandleUpdate(ctx *gin.Context) {
 		return
 	}
 	// Update the task status
-	dao.Modify(task, "status", strconv.Itoa(statusInt))
+	err := dao.Modify(task, "status", strconv.Itoa(statusInt))
+	if err != nil {
+		return
+	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(task))
 }

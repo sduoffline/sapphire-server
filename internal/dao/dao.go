@@ -63,6 +63,9 @@ func Query[T any](sql string, args ...interface{}) ([]T, error) {
 }
 
 func Modify[T any](data T, column string, value string) error {
-	infra.UpdateSingleColumn(data, column, value)
+	err := infra.UpdateSingleColumn(data, column, value)
+	if err != nil {
+		return err
+	}
 	return nil
 }
