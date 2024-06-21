@@ -21,6 +21,16 @@ func NewAnnotationRouter(engine *gin.Engine) {
 var datasetDomain = domain.NewDatasetDomain()
 var annotationDomain = domain.NewAnnotationDomain()
 
+// HandleGetAnnotation godoc
+// @Summary Get images for annotation
+// @Description Get images for annotation
+// @Tags annotation
+// @Accept json
+// @Produce json
+// @Param set_id path int true "Dataset ID"
+// @Param size query int false "Number of images"
+// @Success 200 {object} dto.Response{data=[]interface{}}
+// @Router /annotate/{set_id} [get]
 func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 	datasetID, _ := strconv.Atoi(ctx.Param("set_id"))
 	size, _ := strconv.Atoi(ctx.Query("size"))

@@ -1,0 +1,53 @@
+definitions:
+  dto.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+info:
+  contact:
+    name: API Support
+    url: https://www.example.com/support
+  description: Sapphire is a platform for image annotation and dataset management.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  title: Sapphire Server API
+  version: "1.0"
+paths:
+  /annotate/{set_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get images for annotation
+      parameters:
+      - description: Dataset ID
+        in: path
+        name: set_id
+        required: true
+        type: integer
+      - description: Number of images
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  items:
+                    type: object
+                  type: array
+              type: object
+      summary: Get images for annotation
+      tags:
+      - annotation
+swagger: "2.0"
