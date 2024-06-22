@@ -11,6 +11,7 @@ import (
 	"sapphire-server/internal/service"
 	"sapphire-server/pkg/util"
 	"strconv"
+	"strings"
 )
 
 type DatasetRouter struct {
@@ -167,23 +168,66 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	}
 
 	// 将文件保存到本地
-	err = ctx.SaveUploadedFile(file, "./"+file.Filename)
+	savePath := "./files/" + file.Filename
+	saveDir := strings.Replace(savePath, ".zip", "", 1)
+	// 检查是否存在该文件
+	if _, err := os.Stat(savePath); err == nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("文件已存在"))
+		return
+	}
+	err = ctx.SaveUploadedFile(file, savePath)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
 
+	// 结束后删除文件
+	defer func() {
+		err := os.Remove(savePath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+			return
+		}
+	}()
+
 	// 解压缩文件
 	// 先将文件读取为[]byte
-	bytes, err := os.ReadFile("./" + file.Filename)
+	bytes, err := os.ReadFile(savePath)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
-	err = util.Unzip(bytes, "./")
+	// 创建对应的目录
+	err = os.MkdirAll(saveDir, os.ModePerm)
+	// 检查目录是否创建成果
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
+	}
+
+	// 解压文件
+	err = util.Unzip(bytes, "./files/")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 取出该目录下的所有文件
+	files, err := os.ReadDir(saveDir)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 遍历文件，将文件上传到图床
+	for _, f := range files {
+		// 读取文件
+		filePath := saveDir + "/" + f.Name()
+		_, err := os.ReadFile(filePath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
