@@ -52,7 +52,7 @@ func (m *Message) ListMessageByReceiverID(receiverID uint) []Message {
 // ReadMessage 标记消息为已读
 func (m *Message) ReadMessage(messageID uint) {
 	var err error
-	message, err := dao.FindOne(Message{}, messageID)
+	message, err := dao.FindOne[Message](Message{}, messageID)
 	if err != nil {
 		return
 	}

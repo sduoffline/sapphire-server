@@ -91,6 +91,15 @@ func (d *Dataset) RemoveUserFromDataset(userID uint, datasetID uint) error {
 	return nil
 }
 
+// ListJoinedUserByDatasetID 列出数据集的用户
+func (d *Dataset) ListJoinedUserByDatasetID(datasetID uint) ([]DatasetUser, error) {
+	res, err := dao.FindAll[DatasetUser]("dataset_id = ?", datasetID)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // IsUserClaimDataset 判断用户是否拥有数据集
 func (d *Dataset) IsUserClaimDataset(userID uint, datasetID uint) bool {
 	record, err := dao.FindOne[DatasetUser]("user_id = ? and dataset_id = ?", userID, datasetID)

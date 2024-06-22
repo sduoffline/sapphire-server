@@ -199,3 +199,14 @@ func (u *User) FindRoleIdByRoleName(roleName string) (int, error) {
 		return role.ID, nil
 	}
 }
+
+// ListUsersByIds 根据 ID 列出用户
+func (u *User) ListUsersByIds(ids []uint) ([]User, error) {
+	var err error
+	var users []User
+	users, err = dao.FindAll[User]("id in (?)", ids)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

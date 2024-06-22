@@ -28,6 +28,8 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 		authRouter.GET("/joined/list", router.HandleJoinedList)
 		authRouter.GET("/user/list", router.HandleUserList)
 
+		authRouter.GET("/joined/users/:id", router.ListDatasetJoinedUsers)
+
 		authRouter.POST("/query", router.HandleQuery)
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.PUT("/update/:id", router.HandleUpdate)
@@ -194,6 +196,46 @@ func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 		}
 	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
+}
+
+// ListDatasetJoinedUsers 列出加入数据集的用户
+func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
+	var err error
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+
+	// 获取用户
+	users, err := datasetDomain.ListJoinedUserByDatasetID(uint(datasetID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 遍历 users ，去掉自己
+	for i, user := range users {
+		if user.ID == ctx.Keys["id"] {
+			users = append(users[:i], users[i+1:]...)
+		}
+	}
+
+	ids := make([]uint, 0)
+	for _, user := range users {
+		ids = append(ids, user.ID)
+	}
+
+	var res []domain.User
+	if len(ids) > 0 {
+		res, err = userDomain.ListUsersByIds(ids)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
 // HandleUploadImg 上传图片
