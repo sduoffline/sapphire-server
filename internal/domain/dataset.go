@@ -169,16 +169,40 @@ func (d *Dataset) GetDatasetList() ([]Dataset, error) {
 	return res, nil
 }
 
-func (d *Dataset) ListUserJoinedDatasetList(userID uint) ([]Dataset, error) {
-	res, err := dao.Query[Dataset]("select * from datasets where id in (select dataset_id from dataset_users where user_id = ?)", userID)
+// ListByKeywords 根据关键字列出数据集
+func (d *Dataset) ListByKeywords(keywords []string) ([]Dataset, error) {
+	sql := "select * from datasets where name like ?"
+	for i := 1; i < len(keywords); i++ {
+		sql += " and name like ?"
+	}
+	res, err := dao.Query[Dataset](sql, keywords[0])
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-// GetDatasetListByUserID 根据用户 ID 获取数据集列表
-func (d *Dataset) GetDatasetListByUserID(createdID uint) ([]Dataset, error) {
+// ListAllDataset 列出所有记录
+func (d *Dataset) ListAllDataset() ([]Dataset, error) {
+	res, err := dao.FindAll[Dataset]()
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// ListUserJoinedDatasetList 列出用户加入的数据集
+func (d *Dataset) ListUserJoinedDatasetList(userID uint) ([]Dataset, error) {
+	sql := "select * from datasets where id in (select dataset_id from dataset_users where user_id = ?) and creator_id != ?"
+	res, err := dao.Query[Dataset](sql, userID, userID)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// ListUserCreatedDatasets 列出用户创建的数据集
+func (d *Dataset) ListUserCreatedDatasets(createdID uint) ([]Dataset, error) {
 	res, err := dao.FindAll[Dataset]("creator_id = ?", createdID)
 	if err != nil {
 		return nil, err

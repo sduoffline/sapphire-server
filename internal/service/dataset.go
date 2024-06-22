@@ -3,7 +3,9 @@ package service
 import (
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sort"
 	"strings"
+	"time"
 )
 
 type DatasetService struct {
@@ -80,7 +82,7 @@ func (s *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 	}
 
 	// 读取用户创建的数据集和加入的数据集
-	userCreatedDatasets, err := datasetDomain.GetDatasetListByUserID(userID)
+	userCreatedDatasets, err := datasetDomain.ListUserCreatedDatasets(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
 	}
@@ -111,7 +113,7 @@ func (s *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 // GetUserCreatedDatasetList 获取用户创建的数据集列表
 func (s *DatasetService) GetUserCreatedDatasetList(creatorID uint) []*DatasetResult {
 	var err error
-	datasets, err := datasetDomain.GetDatasetListByUserID(creatorID)
+	datasets, err := datasetDomain.ListUserCreatedDatasets(creatorID)
 	if err != nil {
 		// 返回空列表
 		return make([]*DatasetResult, 0)
@@ -136,7 +138,7 @@ func (s *DatasetService) GetUserJoinedDatasetList(userID uint) []*DatasetResult 
 
 // GetUserDatasetList 获取用户的数据集列表
 func (s *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult {
-	createdDatasets, err := datasetDomain.GetDatasetListByUserID(userID)
+	createdDatasets, err := datasetDomain.ListUserCreatedDatasets(userID)
 	if err != nil {
 		return make([]*DatasetResult, 0)
 	}
@@ -168,16 +170,84 @@ func (s *DatasetService) GetUserDatasetList(userID uint) []*DatasetResult {
 // QueryDatasetList 查询数据集列表
 // TODO: 实现查询数据集列表的逻辑
 func (s *DatasetService) QueryDatasetList(userID uint, query *dto.DatasetQuery) []*DatasetResult {
-	//var err error
-	var datasets []domain.Dataset
+	var _ error
 	print(query)
 	print(userID)
 
+	// 使用一个Map存储不同方式的查询结果
+	queryMap := make(map[string][]domain.Dataset)
+	// 用户创建的数据集
+	if query.Myself {
+		// 查询用户创建的数据集
+		createdDatasets, err := datasetDomain.ListUserCreatedDatasets(userID)
+		if err != nil {
+			return make([]*DatasetResult, 0)
+		}
+		queryMap["created"] = createdDatasets
+	}
+	// 用户加入的数据集
+	if query.Owner {
+		// 查询用户加入的数据集
+		joinedDatasets, err := datasetDomain.ListUserJoinedDatasetList(userID)
+		if err != nil {
+			return make([]*DatasetResult, 0)
+		}
+		queryMap["joined"] = joinedDatasets
+	}
+	// 关键字查询
+	if query.Keyword != "" {
+		// 对关键字进行分割
+		keywords := strings.Split(query.Keyword, " ")
+		// 查询关键字
+		keyDatasets, err := datasetDomain.ListByKeywords(keywords)
+		if err != nil {
+			return make([]*DatasetResult, 0)
+		}
+		queryMap["keyword"] = keyDatasets
+	}
+
+	// 将所有查询结果合并
+	mergedDatasets := make([]domain.Dataset, 0)
+	mergedDatasets = append(mergedDatasets, queryMap["created"]...)
+	mergedDatasets = append(mergedDatasets, queryMap["joined"]...)
+	mergedDatasets = append(mergedDatasets, queryMap["keyword"]...)
+
 	// 包装结果
 	var results []*DatasetResult
-	for _, dataset := range datasets {
-		result := NewDatasetResult(&dataset, false, false)
+	// 使用一个map存储数据集ID，避免重复
+	datasetIdMap := make(map[uint]bool)
+	// 构建结果列表
+	for _, dataset := range mergedDatasets {
+		// 当数据集ID已经存在时，跳过
+		if _, ok := datasetIdMap[dataset.ID]; ok {
+			continue
+		}
+		result := NewDatasetResult(&dataset, userID == dataset.CreatorID, datasetDomain.IsUserClaimDataset(userID, dataset.ID))
 		results = append(results, result)
+		datasetIdMap[dataset.ID] = true
+	}
+
+	// 排序
+	if query.Order == dto.OrderTime {
+		// 按时间排序
+		sort.Slice(results, func(i, j int) bool {
+			var iSchedule, jSchedule time.Time
+			iSchedule, _ = time.Parse("2006-01-02 15:04:05", results[i].Schedule)
+			jSchedule, _ = time.Parse("2006-01-02 15:04:05", results[j].Schedule)
+			return iSchedule.After(jSchedule)
+		})
+	}
+	if query.Order == dto.OrderHot {
+		// 按热度排序
+		sort.Slice(results, func(i, j int) bool {
+			return results[i].Total > results[j].Total
+		})
+	}
+	if query.Order == dto.OrderSize {
+		// 按大小排序
+		sort.Slice(results, func(i, j int) bool {
+			return results[i].ObjectCnt > results[j].ObjectCnt
+		})
 	}
 
 	return results
