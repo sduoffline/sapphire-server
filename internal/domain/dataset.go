@@ -134,11 +134,12 @@ func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, e
 }
 
 // DeleteDataset 删除数据集
-func (d *Dataset) DeleteDataset() {
-	err := dao.Modify(d, "is_deleted", "1")
+func (d *Dataset) DeleteDataset() error {
+	err := dao.Delete(d)
 	if err != nil {
-		return
+		return err
 	}
+	return nil
 }
 
 // GetDatasetByID 根据 ID 获取数据集

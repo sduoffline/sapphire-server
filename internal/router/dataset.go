@@ -32,7 +32,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
 		authRouter.POST("/download/:id", router.HandleDownloadDataset)
-		authRouter.POST("/delete", router.HandleDelete)
+		authRouter.DELETE("/:id", router.HandleDelete)
 		//authRouter.POST("/register", router.HandleRegister)
 		authRouter.GET("/:id", router.HandleGetByID)
 		authRouter.POST("/join/:id", router.HandleJoin)
@@ -142,10 +142,28 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 
 // HandleDelete 删除数据集
 func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
-	datasetID, _ := strconv.Atoi(ctx.Query("dataset_id"))
-	dataset := domain.NewDatasetDomain()
-	dataset.ID = uint(datasetID)
-	dataset.DeleteDataset()
+	var err error
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+	dataset, err := datasetDomain.GetDatasetByID(uint(datasetID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+	// 删除数据集
+	if dataset == nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("dataset not found"))
+		return
+	} else {
+		err = dataset.DeleteDataset()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+			return
+		}
+	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
