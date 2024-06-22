@@ -158,7 +158,7 @@ func (t *DatasetRouter) HandleUpdate(ctx *gin.Context) {
 	}
 
 	// 创建数据集
-	dataset, err := domain.NewDatasetDomain().CreateDataset(uint(datasetID), body)
+	dataset, err := datasetDomain.UpdateDataset(creatorID, uint(datasetID), body)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return

@@ -30,7 +30,7 @@ func HasID[T any](data T) bool {
 	id := v.FieldByName("ID")
 	print(id.IsValid())
 	// 判断字段是否为空
-	return id.IsValid() && !id.IsZero()
+	return id.IsValid() && id.Uint() > 0
 }
 
 // Insert

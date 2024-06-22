@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
@@ -133,13 +134,19 @@ func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, e
 	return datasetInfo, nil
 }
 
-func (d *Dataset) UpdateDataset(id uint, dto dto.NewDataset) (*Dataset, error) {
+func (d *Dataset) UpdateDataset(creatorID uint, id uint, dto dto.NewDataset) (*Dataset, error) {
 	var err error
 	dataset, err := d.GetDatasetByID(id)
 	if err != nil {
 		return nil, err
 	}
+	if dataset == nil {
+		return nil, fmt.Errorf("dataset not found")
+	}
 
+	if creatorID != dataset.CreatorID {
+		return nil, fmt.Errorf("no permission")
+	}
 	dataset.Name = dto.Name
 	dataset.Description = dto.Description
 	dataset.Cover = dto.Cover
