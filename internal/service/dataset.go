@@ -259,6 +259,9 @@ func (s *DatasetService) GetDatasetDetail(userId uint, id uint) *DatasetResult {
 	if err != nil {
 		return nil
 	}
+	if dataset == nil {
+		return nil
+	}
 	datas, err := datasetDomain.GetDatasetDataList(id)
 	if err != nil {
 		return nil

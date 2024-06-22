@@ -133,6 +133,32 @@ func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, e
 	return datasetInfo, nil
 }
 
+func (d *Dataset) UpdateDataset(id uint, dto dto.NewDataset) (*Dataset, error) {
+	var err error
+	dataset, err := d.GetDatasetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	dataset.Name = dto.Name
+	dataset.Description = dto.Description
+	dataset.Cover = dto.Cover
+	dataset.EndTime, _ = time.Parse("2006-01-02 15:04:05", dto.EndTime)
+	tagStr := ""
+	for _, tag := range dto.Tags {
+		tagStr += tag + ","
+	}
+	dataset.Tags = tagStr
+
+	err = dao.Save(dataset)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataset, err
+
+}
+
 // DeleteDataset 删除数据集
 func (d *Dataset) DeleteDataset() error {
 	err := dao.Delete(d)

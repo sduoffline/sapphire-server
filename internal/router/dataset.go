@@ -30,6 +30,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 
 		authRouter.POST("/query", router.HandleQuery)
 		authRouter.POST("/create", router.HandleCreate)
+		authRouter.PUT("/update/:id", router.HandleUpdate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
 		authRouter.POST("/download/:id", router.HandleDownloadDataset)
 		authRouter.DELETE("/:id", router.HandleDelete)
@@ -130,6 +131,34 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 
 	// 创建数据集
 	dataset, err := domain.NewDatasetDomain().CreateDataset(creatorID, body)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 返回创建的数据集
+	res := datasetService.GetDatasetDetail(creatorID, dataset.ID)
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
+}
+
+func (t *DatasetRouter) HandleUpdate(ctx *gin.Context) {
+	var err error
+	creatorID := ctx.Keys["id"].(uint)
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
+		return
+	}
+
+	// 提取请求体到 NewDataset 结构体
+	body := dto.NewDataset{}
+	if err := ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 创建数据集
+	dataset, err := domain.NewDatasetDomain().CreateDataset(uint(datasetID), body)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
