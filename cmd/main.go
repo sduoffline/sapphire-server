@@ -47,6 +47,7 @@ func main() {
 	router.NewDatasetRouter(engine)
 	router.NewAnnotationRouter(engine)
 	router.NewTestRouter(engine)
+	router.NewScoreRouter(engine)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -34,12 +34,20 @@ func (s *Score) CreateScore(score *Score) error {
 }
 
 // ListScoreRecordsInDays 获取用户最近 days 天的评分记录
-func (s *Score) ListScoreRecordsInDays(userID uint, days int) ([]Score, error) {
+func (s *Score) ListScoreRecordsInDays(userID uint, days int) ([]ScoreResult, error) {
 	var err error
 	sql := "SELECT * FROM scores WHERE user_id = ? AND created_at >= now() - make_interval(days := ?)"
 	scores, err := dao.Query[Score](sql, userID, days)
 	if err != nil {
 		return nil, err
 	}
-	return scores, nil
+	var results []ScoreResult
+	for _, score := range scores {
+		results = append(results, ScoreResult{
+			Date:  score.CreatedAt.Format("2006-01-02"),
+			Score: score.Score,
+			Count: 1,
+		})
+	}
+	return results, nil
 }
