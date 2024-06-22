@@ -20,12 +20,13 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	router := &DatasetRouter{}
 	datasetGroup := engine.Group("/dataset")
 	datasetGroup.GET("/list", router.HandleList)
-	datasetGroup.GET("/created/list", router.HandleCreatedList)
-	datasetGroup.GET("/joined/list", router.HandleJoinedList)
-	datasetGroup.GET("/user/list", router.HandleUserList)
 
 	authRouter := datasetGroup.Group("/").Use(middleware.AuthMiddleware())
 	{
+		authRouter.GET("/created/list", router.HandleCreatedList)
+		authRouter.GET("/joined/list", router.HandleJoinedList)
+		authRouter.GET("/user/list", router.HandleUserList)
+
 		authRouter.POST("/query", router.HandleQuery)
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
