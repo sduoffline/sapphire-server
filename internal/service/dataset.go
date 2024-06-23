@@ -69,6 +69,9 @@ func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *Data
 		return nil
 	}
 
+	// 将所有标注完成的图片加入到embeddingImages中
+	embeddingImages = append(embeddingImages, annotationImages...)
+
 	var statusStr string
 	if len(allImages) == len(annotationImages) {
 		statusStr = "annotationSuccess"
