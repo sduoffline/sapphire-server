@@ -50,6 +50,7 @@ func newAnnotationFromDTO(userID uint, anno dto.NewAnnotation) *Annotation {
 		Content:        datatypes.JSON(marksStr),
 		DatasetID:      anno.DatasetID,
 		UserID:         userID,
+		ImageID:        anno.ImgID,
 		IsQualified:    true,
 		ReplicaCount:   0,
 		QualifiedCount: 0,
@@ -88,6 +89,7 @@ func (a *Annotation) ListAnnotationsByUserID(userID uint) ([]Annotation, error) 
 	return annotations, nil
 }
 
+// ListAnnotationsByImageID 根据图片 ID 获取该图片的所有标注
 func (a *Annotation) ListAnnotationsByImageID(imageID uint) ([]Annotation, error) {
 	var err error
 	annotations, err := dao.FindAll[Annotation]("image_id = ?", imageID)
@@ -95,4 +97,65 @@ func (a *Annotation) ListAnnotationsByImageID(imageID uint) ([]Annotation, error
 		return nil, err
 	}
 	return annotations, nil
+}
+
+// GetAnnotationByImageID 根据图片 ID 获取该图片的标注
+func (a *Annotation) GetAnnotationByImageID(imageID uint) (*Annotation, error) {
+	var err error
+	annotations, err := dao.FindAll[Annotation]("image_id = ?", imageID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果没有标注，返回 nil
+	if len(annotations) == 0 {
+		slog.Debug("No Annotation Found")
+		return nil, nil
+	}
+
+	// 移除不合格的标注
+	var candidates []Annotation
+	for _, anno := range annotations {
+		if anno.IsQualified {
+			candidates = append(candidates, anno)
+		} else {
+			slog.Debug("Remove Unqualified Annotation", anno)
+		}
+	}
+
+	// 接收最后的结果
+	var centerX, centerY, width, height float64
+	length := len(candidates)
+	for _, anno := range candidates {
+		content := anno.Content
+		var marks []dto.AnnotationResult
+		err = json.Unmarshal([]byte(content), &marks)
+		if err != nil {
+			return nil, err
+		}
+
+		// 计算中心点和宽高
+		for _, mark := range marks {
+			centerX += mark.CenterX
+			centerY += mark.CenterY
+			width += mark.Width
+			height += mark.Height
+		}
+	}
+	mark := dto.AnnotationResult{
+		CenterX: centerX / float64(length),
+		CenterY: centerY / float64(length),
+		Width:   width / float64(length),
+		Height:  height / float64(length),
+	}
+	markJSON, _ := json.Marshal(mark)
+	slog.Debug("Final Mark", string(markJSON))
+	res := &Annotation{
+		Content:   datatypes.JSON(markJSON),
+		DatasetID: candidates[0].DatasetID,
+		ImageID:   candidates[0].ImageID,
+		UserID:    candidates[0].UserID,
+	}
+
+	return res, nil
 }

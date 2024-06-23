@@ -17,6 +17,7 @@ func NewAnnotationRouter(engine *gin.Engine) {
 	annotationGroup := engine.Group("/annotate").Use(middleware.AuthMiddleware()).Use(middleware.UserIDMiddleware())
 	annotationGroup.GET("/:set_id", router.HandleGetAnnotation)
 	annotationGroup.POST("/make", router.HandleMake)
+	annotationGroup.GET("/result/:id", router.HandleAnnotationResult)
 }
 
 var datasetDomain = domain.NewDatasetDomain()
@@ -70,4 +71,22 @@ func (a *AnnotationRouter) HandleMake(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(annotation))
+}
+
+// HandleGetAnnotation godoc
+func (a *AnnotationRouter) HandleAnnotationResult(ctx *gin.Context) {
+	var err error
+	imageID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	annotations, err := annotationDomain.ListAnnotationsByImageID(uint(imageID))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(annotations))
 }
