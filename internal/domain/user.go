@@ -55,9 +55,9 @@ func buildUserResult(user *User, joinedCount, createdCount, annotatedCount int) 
 	createScore := math.Pow(float64(createdCount), 1.1)
 	joinScore := math.Pow(float64(joinedCount), 1.2)
 	annotateScore := math.Pow(float64(annotatedCount), 1.3)
-	slog.Info("createScore", createScore)
-	slog.Info("joinScore", joinScore)
-	slog.Info("annotateScore", annotateScore)
+	slog.Debug("createScore", createScore)
+	slog.Debug("joinScore", joinScore)
+	slog.Debug("annotateScore", annotateScore)
 	totalScore := int(10 * (createScore + joinScore + annotateScore) / 3)
 
 	return &UserResult{
@@ -152,6 +152,7 @@ func (u *User) Login(login dto.Login) (token string, user *User, err error) {
 	if user == nil {
 		return "", nil, errors.New("user not found")
 	}
+	slog.Info("user", user)
 	// Redis DEMO
 	// infra.Redis.Set(infra.Ctx, "name", user.Name, time.Duration(10)*time.Second)
 	// 验证口令
@@ -212,6 +213,7 @@ func (u *User) GetUserDetail(userId uint) (*UserResult, error) {
 }
 
 func (u *User) ChangeInfo(info dto.ChangeUserInfo, userId uint) (user *User, err error) {
+	slog.Info("ChangeInfo", info)
 	user, err = dao.First[User](userId)
 	if err != nil {
 		return nil, err
@@ -234,6 +236,7 @@ func (u *User) ChangeInfo(info dto.ChangeUserInfo, userId uint) (user *User, err
 	if err != nil {
 		return nil, err
 	}
+	slog.Info("ChangeInfo Success: ", user)
 
 	return user, nil
 }
@@ -258,6 +261,7 @@ func (u *User) hashPassword(password string) (string, error) {
 
 // verifyPassword 验证密码是否匹配哈希
 func (u *User) verifyPassword(hashedPassword, password string) error {
+	slog.Info("CompareHashAndPassword hashedPassword ", hashedPassword)
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err
 }
@@ -326,7 +330,7 @@ func (u *User) ListUsersByRank() ([]UserResult, error) {
 			slog.Error("ListAnnotationsByUserID", err)
 			return nil, err
 		}
-		slog.Info("annotations", annotations)
+		slog.Debug("annotations", annotations)
 
 		res := buildUserResult(&user, len(joinedDatasets), len(createdDatasets), len(annotations))
 		userResults = append(userResults, *res)
@@ -340,10 +344,14 @@ func (u *User) ListUsersByRank() ([]UserResult, error) {
 			}
 		}
 	}
+	slog.Debug("userResults", userResults)
 
 	// 只返回前 10 个用户
 	if len(userResults) > 10 {
 		userResults = userResults[:10]
+	} else {
+		slog.Info("User count less than 10")
+		slog.Debug("userResults", userResults)
 	}
 
 	return userResults, nil

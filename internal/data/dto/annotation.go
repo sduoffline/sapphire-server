@@ -4,7 +4,6 @@ type NewAnnotation struct {
 	Marks     []AnnotationResult `json:"marks"`
 	ImgID     uint               `json:"imgId"`
 	DatasetID uint               `json:"datasetId"`
-	CreatorID uint               `json:"creatorId"`
 }
 
 type AnnotationResult struct {

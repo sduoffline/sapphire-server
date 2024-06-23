@@ -85,7 +85,7 @@ func GetDBConfig() string {
 }
 
 func GetRedisConfig() string {
-	//	"redis://<user>:<pass>@localhost:6379/<db>"
+	//	"redis://<user>:<pass>@localhost:6379/<datatypes>"
 	return fmt.Sprintf("redis://%s:%s@%s:%d/%d",
 		Conf.Datasource.Redis.User,
 		Conf.Datasource.Redis.Password,

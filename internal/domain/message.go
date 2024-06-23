@@ -2,6 +2,7 @@ package domain
 
 import (
 	"gorm.io/gorm"
+	"log/slog"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 )
@@ -14,6 +15,17 @@ type Message struct {
 	Title      string
 	Type       int
 }
+
+const (
+	// DEFAULT 默认
+	DEFAULT = 0
+	// TREND 动态
+	TREND = 1
+	// NOTIFICATION 通知
+	NOTIFICATION = 2
+	// SYSTEM 系统消息
+	SYSTEM = 3
+)
 
 func NewMessageDomain() *Message {
 	return &Message{}
@@ -56,6 +68,8 @@ func (m *Message) ReadMessage(messageID uint) {
 	if err != nil {
 		return
 	}
+
+	slog.Debug("message", message)
 	err = dao.Delete(message)
 	if err != nil {
 		return
