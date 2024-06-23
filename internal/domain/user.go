@@ -126,6 +126,14 @@ func (u *User) Login(login dto.Login) (token string, user *User, err error) {
 	return token, user, nil
 }
 
+func (u *User) GetUserInfo(userId uint) (*User, error) {
+	user, err := dao.First[User](userId)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (u *User) ChangeInfo(info dto.ChangeUserInfo, userId uint) (user *User, err error) {
 	user, err = dao.First[User](userId)
 	if err != nil {

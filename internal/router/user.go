@@ -7,6 +7,7 @@ import (
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"sapphire-server/internal/middleware"
+	"strconv"
 )
 
 // UserRouter 用户路由
@@ -23,7 +24,7 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	userGroup.POST("/register", router.HandleRegister)
 	userGroup.POST("/login", router.HandleLogin)
 	userGroup.POST("/change-role", router.HandleChangeRole)
-	userGroup.GET("/profile", router.HandleProfile)
+	userGroup.GET("/profile/:id", router.HandleProfile)
 
 	authGroup := userGroup.Group("").Use(middleware.AuthMiddleware())
 	{
@@ -37,6 +38,7 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 }
 
 // HandleProfile godoc
+//
 //	@Summary		获取用户信息
 //	@Description	根据用户 id 获取用户信息
 //	@Tags			user
@@ -46,8 +48,14 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 //	@Success		200		{object}	dto.Response{data=domain.User}
 //	@Router			/user/profile [get]
 func (u *UserRouter) HandleProfile(ctx *gin.Context) {
-	userId := ctx.Query("userId")
-	user, err := dao.First[domain.User]("id = ?", userId)
+	var err error
+	userId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	user, err := userDomain.GetUserInfo(uint(userId))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
@@ -55,10 +63,12 @@ func (u *UserRouter) HandleProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("user not found"))
 		return
 	}
+
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user))
 }
 
 // HandleRegister godoc
+//
 //	@Summary		注册
 //	@Description	用户注册
 //	@Tags			user
@@ -93,6 +103,7 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 }
 
 // HandleLogin godoc
+//
 //	@Summary		登录
 //	@Description	用户登录
 //	@Tags			user
@@ -129,6 +140,7 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 }
 
 // HandleChangeRole godoc
+//
 //	@Summary		修改用户角色
 //	@Description	根据用户 id 更改权限
 //	@Tags			user
@@ -165,6 +177,7 @@ func (u *UserRouter) HandleChangeRole(ctx *gin.Context) {
 }
 
 // HandleCredit godoc
+//
 //	@Summary		获取用户积分
 //	@Description	根据用户 id 获取用户积分
 //	@Tags			user
@@ -187,6 +200,7 @@ func (u *UserRouter) HandleCredit(ctx *gin.Context) {
 }
 
 // HandleChangePasswd godoc
+//
 //	@Summary		修改密码
 //	@Description	修改密码
 //	@Tags			user
@@ -215,6 +229,7 @@ func (u *UserRouter) HandleChangePasswd(ctx *gin.Context) {
 }
 
 // HandleChangeInfo godoc
+//
 //	@Summary		修改用户信息
 //	@Description	修改用户信息
 //	@Tags			user

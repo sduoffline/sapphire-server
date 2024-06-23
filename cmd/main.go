@@ -12,13 +12,13 @@ import (
 
 import "github.com/swaggo/files" // swagger embed files
 
-//	@title			Sapphire Server API
-//	@version		1.0
-//	@description	Sapphire is a platform for image annotation and dataset management.
-//	@contact.name	API Support
-//	@contact.url	https://www.example.com/support
-//	@license.name	Apache 2.0
-//	@license.url	https://www.apache.org/licenses/LICENSE-2.0.html
+// @title			Sapphire Server API
+// @version		1.0
+// @description	Sapphire is a platform for image annotation and dataset management.
+// @contact.name	API Support
+// @contact.url	https://www.example.com/support
+// @license.name	Apache 2.0
+// @license.url	https://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	var err error
 	// 初始化并读取配置
@@ -39,6 +39,7 @@ func main() {
 	//engine.Use(middleware.AuthMiddleware())
 	// init http routes
 	engine.Use(middleware.Cors())
+	engine.Use(middleware.UserIDMiddleware())
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	// 调用 internal/router/user.go 中的 NewUserRouter 方法
 	router.NewUserRouter(engine)
