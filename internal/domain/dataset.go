@@ -37,8 +37,18 @@ type ImgDataset struct {
 	gorm.Model
 	ImgUrl       string `gorm:"column:img_url" json:"imgUrl"`
 	DatasetId    uint   `gorm:"column:dataset_id" json:"datasetId"`
+	Status       int    `gorm:"column:status" json:"status"`
 	EmbeddingUrl string `gorm:"column:embedding_url" json:"embeddingUrl"`
 }
+
+const (
+	ImgDatasetStatusDefault           = 0
+	ImgDatasetStatusEmbedding         = 1
+	ImgDatasetStatusAnnotated         = 2
+	ImgDatasetStatusReAnnotation      = 3
+	ImgDatasetStatusAnnotationFailed  = 4
+	ImgDatasetStatusAnnotationSuccess = 5
+)
 
 type DatasetUser struct {
 	gorm.Model
@@ -259,6 +269,26 @@ func (d *Dataset) GetDatasetTypeByID(id uint) (*DatasetType, error) {
 	if err != nil {
 		return nil, err
 	}
+	return res, nil
+}
+
+// ListImagesByStatusAndDatasetID 根据数据集 ID 和状态列出图片
+func (d *Dataset) ListImagesByStatusAndDatasetID(datasetID uint, status int) ([]ImgDataset, error) {
+	var err error
+	var res []ImgDataset
+	if status == -1 {
+		res, err = dao.FindAll[ImgDataset]("dataset_id = ?", datasetID)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		res, err = dao.FindAll[ImgDataset]("dataset_id = ? and status = ?", datasetID, status)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return res, nil
 }
 

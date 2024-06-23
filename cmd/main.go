@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"log/slog"
 	docs "sapphire-server/cmd/docs"
 	"sapphire-server/internal/conf"
 	"sapphire-server/internal/infra"
@@ -23,6 +24,7 @@ func main() {
 	var err error
 	// 初始化并读取配置
 	conf.InitConfig()
+	slog.Info("Server started")
 
 	// 连接数据库
 	err = infra.InitDB()

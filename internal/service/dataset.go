@@ -19,24 +19,29 @@ func NewDatasetService() *DatasetService {
 type DatasetItem struct {
 	ImgUrl       string `json:"imgUrl"`
 	EmbeddingUrl string `json:"embeddingUrl"`
+	Status       string `json:"status"`
 	Id           int    `json:"id"`
 }
 
 type DatasetResult struct {
-	DatasetId   uint          `json:"dataSetId"`
-	DatasetName string        `json:"dataSetName"`
-	TaskInfo    string        `json:"taskInfo"`
-	ObjectCnt   int           `json:"objectCnt"`
-	Objects     []string      `json:"objects"`
-	Owner       bool          `json:"owner"`
-	Claim       bool          `json:"claim"`
-	Datas       []DatasetItem `json:"datas"`
-	Schedule    string        `json:"schedule"`
-	Total       int           `json:"total"`
-	Finished    int           `json:"finished"`
+	DatasetId       uint          `json:"dataSetId"`
+	DatasetName     string        `json:"dataSetName"`
+	TaskInfo        string        `json:"taskInfo"`
+	ObjectCnt       int           `json:"objectCnt"`
+	Objects         []string      `json:"objects"`
+	Owner           bool          `json:"owner"`
+	Claim           bool          `json:"claim"`
+	Status          string        `json:"status"`
+	Datas           []DatasetItem `json:"datas"`
+	Schedule        string        `json:"schedule"`
+	TotalCount      int           `json:"totalCount"`
+	EmbeddingCount  int           `json:"embeddingCount"`
+	AnnotationCount int           `json:"annotationCount"`
+	Finished        int           `json:"finished"`
 }
 
 func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *DatasetResult {
+	var err error
 	objects := make([]string, 0)
 	if dataset.Tags != "" {
 		tags := strings.Split(dataset.Tags, ",")
@@ -49,24 +54,70 @@ func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *Data
 		}
 	}
 
+	allImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, -1)
+	if err != nil {
+		return nil
+	}
+
+	embeddingImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgDatasetStatusEmbedding)
+	if err != nil {
+		return nil
+	}
+
+	annotationImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgDatasetStatusAnnotated)
+	if err != nil {
+		return nil
+	}
+
+	var statusStr string
+	if len(allImages) == len(annotationImages) {
+		statusStr = "annotationSuccess"
+	} else if len(embeddingImages) == len(allImages) {
+		statusStr = "Ready"
+	} else {
+		statusStr = "default"
+	}
+
 	return &DatasetResult{
-		DatasetId:   dataset.ID,
-		DatasetName: dataset.Name,
-		TaskInfo:    dataset.Description,
-		ObjectCnt:   len(objects),
-		Objects:     objects,
-		Owner:       isOwner,
-		Claim:       isClaim,
-		Schedule:    dataset.EndTime.Format("2006-01-02 15:04:05"),
-		Total:       0,
-		Finished:    0,
+		DatasetId:       dataset.ID,
+		DatasetName:     dataset.Name,
+		TaskInfo:        dataset.Description,
+		ObjectCnt:       len(objects),
+		Objects:         objects,
+		Owner:           isOwner,
+		Claim:           isClaim,
+		Schedule:        dataset.EndTime.Format("2006-01-02 15:04:05"),
+		TotalCount:      len(allImages),
+		EmbeddingCount:  len(embeddingImages),
+		AnnotationCount: len(annotationImages),
+		Status:          statusStr,
+		Finished:        0,
 	}
 }
 
 func newDatasetItem(data *domain.ImgDataset) DatasetItem {
+	var statusStr string
+	switch data.Status {
+	case domain.ImgDatasetStatusDefault:
+		statusStr = "default"
+	case domain.ImgDatasetStatusEmbedding:
+		statusStr = "embedding"
+	case domain.ImgDatasetStatusAnnotated:
+		statusStr = "annotated"
+	case domain.ImgDatasetStatusReAnnotation:
+		statusStr = "reAnnotation"
+	case domain.ImgDatasetStatusAnnotationFailed:
+		statusStr = "annotationFailed"
+	case domain.ImgDatasetStatusAnnotationSuccess:
+		statusStr = "annotationSuccess"
+	default:
+		statusStr = "default"
+	}
+
 	return DatasetItem{
 		ImgUrl:       data.ImgUrl,
 		EmbeddingUrl: data.EmbeddingUrl,
+		Status:       statusStr,
 		Id:           int(data.ID),
 	}
 }
@@ -241,7 +292,7 @@ func (s *DatasetService) QueryDatasetList(userID uint, query *dto.DatasetQuery) 
 	if query.Order == dto.OrderHot {
 		// 按热度排序
 		sort.Slice(results, func(i, j int) bool {
-			return results[i].Total > results[j].Total
+			return results[i].TotalCount > results[j].TotalCount
 		})
 	}
 	if query.Order == dto.OrderSize {
