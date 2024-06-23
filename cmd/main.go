@@ -12,13 +12,13 @@ import (
 
 import "github.com/swaggo/files" // swagger embed files
 
-// @title Sapphire Server API
-// @version 1.0
-// @description Sapphire is a platform for image annotation and dataset management.
-// @contact.name API Support
-// @contact.url https://www.example.com/support
-// @license.name Apache 2.0
-// @license.url https://www.apache.org/licenses/LICENSE-2.0.html
+//	@title			Sapphire Server API
+//	@version		1.0
+//	@description	Sapphire is a platform for image annotation and dataset management.
+//	@contact.name	API Support
+//	@contact.url	https://www.example.com/support
+//	@license.name	Apache 2.0
+//	@license.url	https://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	var err error
 	// 初始化并读取配置
