@@ -33,7 +33,7 @@ func (m *Message) CreateMessage(creatorID uint, dto dto.NewMessage) *Message {
 		message.ReceiverID = receiverID
 	}
 
-	err = dao.Save(message)
+	err = dao.Save(&message)
 	if err != nil {
 		return nil
 	}
@@ -52,7 +52,7 @@ func (m *Message) ListMessageByReceiverID(receiverID uint) []Message {
 // ReadMessage 标记消息为已读
 func (m *Message) ReadMessage(messageID uint) {
 	var err error
-	message, err := dao.FindOne[Message](Message{}, messageID)
+	message, err := dao.FindOne[Message]("id = ?", messageID)
 	if err != nil {
 		return
 	}

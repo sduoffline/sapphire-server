@@ -1,8 +1,8 @@
 package dto
 
 type NewMessage struct {
-	Title      string
-	Content    string
-	ReceiverID []uint
-	Type       int
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+	ReceiverID []uint `json:"receiverId"`
+	Type       int    `json:"type" default:"0"`
 }

@@ -208,22 +208,22 @@ func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
 	}
 
 	// 获取用户
-	users, err := datasetDomain.ListJoinedUserByDatasetID(uint(datasetID))
+	datasetUsers, err := datasetDomain.ListJoinedUserByDatasetID(uint(datasetID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
 
-	// 遍历 users ，去掉自己
-	for i, user := range users {
-		if user.ID == ctx.Keys["id"] {
-			users = append(users[:i], users[i+1:]...)
-		}
-	}
+	//// 遍历 datasetUsers ，去掉自己
+	//for i, relation := range datasetUsers {
+	//	if relation.UserID == ctx.Keys["id"] {
+	//		datasetUsers = append(datasetUsers[:i], datasetUsers[i+1:]...)
+	//	}
+	//}
 
 	ids := make([]uint, 0)
-	for _, user := range users {
-		ids = append(ids, user.ID)
+	for _, relation := range datasetUsers {
+		ids = append(ids, relation.UserID)
 	}
 
 	var res []domain.User
