@@ -2,6 +2,7 @@ package domain
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"gorm.io/gorm"
 	"io"
@@ -212,12 +213,22 @@ func (d *Dataset) GetDatasetByID(id uint) (*Dataset, error) {
 }
 
 // GetResultArchive 获取结果归档
-// TODO: 未实现
 func (d *Dataset) GetResultArchive(id uint) (string, error) {
-	ann, err := dao.FindAll[Annotation]("dataset_id = ?", id)
-	slog.Info("ann", ann)
+	annotations, err := dao.FindAll[Annotation]("dataset_id = ?", id)
 	if err != nil {
 		return "", err
+	}
+
+	var imgIDs []uint
+	for _, a := range annotations {
+		imgIDs = append(imgIDs, a.ImageID)
+	}
+	images, err := d.ListImagesByIDs(imgIDs)
+
+	// 将img构建为以id为key的map，方便后续查找
+	imgMap := make(map[uint]ImgDataset)
+	for _, img := range images {
+		imgMap[img.ID] = img
 	}
 
 	// 将数据写入一个.txt文件
@@ -235,9 +246,11 @@ func (d *Dataset) GetResultArchive(id uint) (string, error) {
 		}
 	}(f)
 
-	for _, a := range ann {
-		_, err := f.WriteString(fmt.Sprintf("%s %s\n", a.Content, a.DeliveredCount))
-		slog.Info("a", a)
+	for _, anno := range annotations {
+		img := imgMap[anno.ImageID]
+		strPattern := "id: %d, content: %s, deliveredCount: %d, qualifiedCount: %d, replicaCount: %d, status: %d, imageUrl: %s\n"
+		str := fmt.Sprintf(strPattern, anno.ID, anno.Content, anno.DeliveredCount, anno.QualifiedCount, anno.ReplicaCount, anno.Status, img.ImgUrl)
+		_, err := f.WriteString(str)
 		if err != nil {
 			return "", err
 		}
@@ -291,6 +304,15 @@ func (d *Dataset) GetResultArchive(id uint) (string, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
+
+	// 生成一个随机文件名
+	// 对当前时间戳进行哈希
+	timeStr := time.Now().String()
+	h := sha1.New()
+	h.Write([]byte(timeStr))
+	hashedTimeStr := fmt.Sprintf("%x", h.Sum(nil)) // 使用SHA256哈希
+	// 使用SHA256哈希
+	fileName = fileName + "_" + hashedTimeStr + ".txt"
 
 	req, err := http.NewRequest("PUT", svrUrl+fileName, bytes.NewReader(fileBytes))
 	if err != nil {
@@ -378,6 +400,14 @@ func (d *Dataset) ListUserCreatedDatasets(createdID uint) ([]Dataset, error) {
 // GetDatasetTypeByID 根据 ID 获取数据集类型
 func (d *Dataset) GetDatasetTypeByID(id uint) (*DatasetType, error) {
 	res, err := dao.First[DatasetType]("id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (d *Dataset) ListImagesByIDs(ids []uint) ([]ImgDataset, error) {
+	res, err := dao.FindAll[ImgDataset]("id in ?", ids)
 	if err != nil {
 		return nil, err
 	}

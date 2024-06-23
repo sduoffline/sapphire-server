@@ -12,6 +12,7 @@ type Annotation struct {
 	Status         int    `gorm:"column:status"`
 	Content        string `gorm:"column:content"`
 	DatasetID      uint   `gorm:"column:dataset_id"`
+	ImageID        uint   `gorm:"column:image_id"`
 	ReplicaCount   int    `gorm:"column:replica_count"`
 	QualifiedCount int    `gorm:"column:qualified_count"`
 	DeliveredCount int    `gorm:"column:delivered_count"`
@@ -19,7 +20,7 @@ type Annotation struct {
 
 type AnnotationUser struct {
 	ID           uint   `gorm:"primaryKey"`
-	AnnotationId uint   `gorm:"column:annotation_id"`
+	AnnotationID uint   `gorm:"column:annotation_id"`
 	UserId       uint   `gorm:"column:user_id"`
 	Status       int    `gorm:"column:status"`
 	Result       string `gorm:"column:result"`
