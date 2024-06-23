@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"log/slog"
 	"sapphire-server/pkg/util"
 	"strings"
 )
@@ -29,6 +30,9 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// 将用户ID保存到Header中
 		c.Set("id", userId)
+
+		curID, _ := c.Get("id")
+		slog.Info("Current User ID: ", curID)
 
 		// 继续处理请求
 		c.Next()

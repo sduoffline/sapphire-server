@@ -236,7 +236,7 @@ func (d *Dataset) GetResultArchive(id uint) (string, error) {
 	}(f)
 
 	for _, a := range ann {
-		//_, err := f.WriteString(fmt.Sprintf("%s %s %s\n", a.ImgUrl, a.Label, a.Description))
+		_, err := f.WriteString(fmt.Sprintf("%s %s\n", a.Content, a.DeliveredCount))
 		slog.Info("a", a)
 		if err != nil {
 			return "", err
@@ -274,6 +274,14 @@ func (d *Dataset) GetResultArchive(id uint) (string, error) {
 			fmt.Println("Failed to close file:", err)
 		}
 	}(file)
+
+	// 删除文件
+	defer func() {
+		err := os.Remove(fileName)
+		if err != nil {
+			fmt.Println("Failed to remove file:", err)
+		}
+	}()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {

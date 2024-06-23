@@ -41,7 +41,6 @@ func main() {
 	//engine.Use(middleware.AuthMiddleware())
 	// init http routes
 	engine.Use(middleware.Cors())
-	engine.Use(middleware.UserIDMiddleware())
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	// 调用 internal/router/user.go 中的 NewUserRouter 方法
 	router.NewUserRouter(engine)

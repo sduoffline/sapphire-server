@@ -12,7 +12,7 @@ type ScoreRouter struct{}
 func NewScoreRouter(engine *gin.Engine) *ScoreRouter {
 	router := &ScoreRouter{}
 	scoreGroup := engine.Group("/score")
-	authRouter := scoreGroup.Group("/").Use(middleware.AuthMiddleware())
+	authRouter := scoreGroup.Group("/").Use(middleware.AuthMiddleware()).Use(middleware.UserIDMiddleware())
 	{
 		authRouter.POST("/create", router.HandleCreate)
 	}

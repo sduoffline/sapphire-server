@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/middleware"
 	"strconv"
 )
 
@@ -13,7 +14,7 @@ type AnnotationRouter struct {
 
 func NewAnnotationRouter(engine *gin.Engine) {
 	router := &AnnotationRouter{}
-	annotationGroup := engine.Group("/annotate")
+	annotationGroup := engine.Group("/annotate").Use(middleware.AuthMiddleware()).Use(middleware.UserIDMiddleware())
 	annotationGroup.GET("/:set_id", router.HandleGetAnnotation)
 	annotationGroup.POST("/make", router.HandleMake)
 }
@@ -22,6 +23,7 @@ var datasetDomain = domain.NewDatasetDomain()
 var annotationDomain = domain.NewAnnotationDomain()
 
 // HandleGetAnnotation godoc
+//
 //	@Summary		获取标注图片信息
 //	@Description	根据数据集ID获取标注图片信息
 //	@Tags			annotation
@@ -43,6 +45,7 @@ func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 }
 
 // HandleMake godoc
+//
 //	@Summary		创建标注
 //	@Description	创建标注
 //	@Tags			annotation

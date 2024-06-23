@@ -6,6 +6,7 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/middleware"
 	"strconv"
 )
 
@@ -14,7 +15,7 @@ type TaskRouter struct {
 
 func NewTaskRouter(engine *gin.Engine) *TaskRouter {
 	router := &TaskRouter{}
-	taskGroup := engine.Group("/task")
+	taskGroup := engine.Group("/task").Use(middleware.UserIDMiddleware())
 	taskGroup.GET("/list", router.HandleList)
 	taskGroup.GET("/next", router.HandleNext)
 	taskGroup.POST("/create", router.HandleCreate)
@@ -23,6 +24,7 @@ func NewTaskRouter(engine *gin.Engine) *TaskRouter {
 }
 
 // HandleList godoc
+//
 //	@Summary		获取任务列表
 //	@Description	获取任务列表
 //	@Tags			task
@@ -36,6 +38,7 @@ func (t *TaskRouter) HandleList(ctx *gin.Context) {
 }
 
 // HandleCreate godoc
+//
 //	@Summary		创建任务
 //	@Description	创建任务
 //	@Tags			task
@@ -63,6 +66,7 @@ func (t *TaskRouter) HandleCreate(ctx *gin.Context) {
 }
 
 // HandleNext godoc
+//
 //	@Summary		获取下一个任务
 //	@Description	获取下一个任务
 //	@Tags			task

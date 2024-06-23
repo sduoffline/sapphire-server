@@ -13,7 +13,7 @@ type MessageRouter struct{}
 func NewMessageRouter(engine *gin.Engine) *MessageRouter {
 	router := &MessageRouter{}
 	messageGroup := engine.Group("/message")
-	authRouter := messageGroup.Group("/").Use(middleware.AuthMiddleware())
+	authRouter := messageGroup.Group("/").Use(middleware.AuthMiddleware()).Use(middleware.UserIDMiddleware())
 	{
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.GET("/list", router.HandleList)
