@@ -53,12 +53,9 @@ type ImgDataset struct {
 }
 
 const (
-	ImgDatasetStatusDefault           = 0
-	ImgDatasetStatusEmbedding         = 1
-	ImgDatasetStatusAnnotated         = 2
-	ImgDatasetStatusReAnnotation      = 3
-	ImgDatasetStatusAnnotationFailed  = 4
-	ImgDatasetStatusAnnotationSuccess = 5
+	ImgStatusDefault   = 0
+	ImgStatusEmbedded  = 1
+	ImgStatusAnnotated = 2
 )
 
 type DatasetUser struct {
@@ -408,6 +405,7 @@ func (d *Dataset) GetDatasetTypeByID(id uint) (*DatasetType, error) {
 	return res, nil
 }
 
+// ListImagesByIDs 根据 ID 列出图片
 func (d *Dataset) ListImagesByIDs(ids []uint) ([]ImgDataset, error) {
 	res, err := dao.FindAll[ImgDataset]("id in ?", ids)
 	if err != nil {
@@ -457,6 +455,7 @@ func (d *Dataset) AddImageList(dataset *Dataset, images []string) error {
 		image := ImgDataset{
 			ImgUrl:    img,
 			DatasetId: dataset.ID,
+			Status:    ImgStatusDefault,
 		}
 		imageList = append(imageList, image)
 	}
@@ -485,4 +484,42 @@ func (d *Dataset) GetImgByDatasetID(id uint, size int) ([]ImgDataset, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+// ListNotEmbeddedImgByDatasetID 获取未嵌入的图片
+func (d *Dataset) ListNotEmbeddedImgByDatasetID(id uint, size int) ([]ImgDataset, error) {
+	sql := "select * from img_datasets where dataset_id = ? and status = ? limit ?"
+	res, err := dao.Query[ImgDataset](sql, id, ImgStatusDefault, size)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// ListAllNotEmbeddedImg 列出所有未嵌入的图片
+func (d *Dataset) ListAllNotEmbeddedImg(size int) ([]ImgDataset, error) {
+	sql := "select * from img_datasets where  status = ? order by created_at desc limit ?"
+	res, err := dao.Query[ImgDataset](sql, ImgStatusDefault, size)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// EmbeddingImg 嵌入图片
+func (d *Dataset) EmbeddingImg(id uint) error {
+	img, err := dao.FindOne[ImgDataset]("id = ?", id)
+	if err != nil {
+		return err
+	}
+	if img == nil {
+		return fmt.Errorf("image not found")
+	}
+
+	img.Status = ImgStatusEmbedded
+	err = dao.Save(img)
+	if err != nil {
+		return err
+	}
+	return nil
 }

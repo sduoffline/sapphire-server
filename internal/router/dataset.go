@@ -2,17 +2,21 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"sapphire-server/internal/middleware"
 	"sapphire-server/internal/service"
+	"sapphire-server/pkg/misc"
 	"sapphire-server/pkg/util"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type DatasetRouter struct {
@@ -344,11 +348,12 @@ func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
 func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	var err error
 	// 读取dataset id
-	_, err = strconv.Atoi(ctx.Param("id"))
+	datasetID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
 		return
 	}
+	datasetID64 := uint(datasetID)
 
 	// 读取表单的文件
 	file, err := ctx.FormFile("file")
@@ -410,15 +415,66 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 		return
 	}
 
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var imageUrls []string
+
+	// 创建一个通道来接收错误
+	errChan := make(chan error, len(files))
+
 	// 遍历文件，将文件上传到图床
 	for _, f := range files {
-		// 读取文件
-		filePath := saveDir + "/" + f.Name()
-		_, err := os.ReadFile(filePath)
+		wg.Add(1)
+		go func(f os.DirEntry) {
+			defer wg.Done()
+
+			// 读取文件
+			filePath := filepath.Join(saveDir, f.Name())
+			bytes, err := ioutil.ReadFile(filePath)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			// 上传图片
+			directUrl, err := misc.UploadImage(bytes, f.Name()+".jpg")
+			if err != nil {
+				errChan <- err
+				return
+			}
+			slog.Info("HandleUploadImg", "directUrl", directUrl)
+
+			// 使用互斥锁来保护对共享变量的访问
+			mu.Lock()
+			imageUrls = append(imageUrls, directUrl)
+			mu.Unlock()
+		}(f)
+	}
+
+	// 等待所有 goroutines 完成
+	wg.Wait()
+	close(errChan)
+
+	// 检查是否有错误
+	for err := range errChan {
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 			return
 		}
+	}
+
+	// 读取数据集
+	dataset, err := datasetDomain.GetDatasetByID(datasetID64)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	// 插入数据库
+	err = datasetDomain.AddImageList(dataset, imageUrls)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
 	}
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))

@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -24,6 +25,7 @@ func Unzip(zipData []byte, destDir string) error {
 			return err
 		}
 	}
+	slog.Debug("Unzip file success")
 	return nil
 }
 

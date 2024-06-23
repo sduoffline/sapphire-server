@@ -59,12 +59,12 @@ func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *Data
 		return nil
 	}
 
-	embeddingImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgDatasetStatusEmbedding)
+	embeddingImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgStatusEmbedded)
 	if err != nil {
 		return nil
 	}
 
-	annotationImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgDatasetStatusAnnotated)
+	annotationImages, err := datasetDomain.ListImagesByStatusAndDatasetID(dataset.ID, domain.ImgStatusAnnotated)
 	if err != nil {
 		return nil
 	}
@@ -101,18 +101,12 @@ func NewDatasetResult(dataset *domain.Dataset, isOwner bool, isClaim bool) *Data
 func newDatasetItem(data *domain.ImgDataset) DatasetItem {
 	var statusStr string
 	switch data.Status {
-	case domain.ImgDatasetStatusDefault:
+	case domain.ImgStatusEmbedded:
+		statusStr = "embedded"
+	case domain.ImgStatusDefault:
 		statusStr = "default"
-	case domain.ImgDatasetStatusEmbedding:
-		statusStr = "embedding"
-	case domain.ImgDatasetStatusAnnotated:
+	case domain.ImgStatusAnnotated:
 		statusStr = "annotated"
-	case domain.ImgDatasetStatusReAnnotation:
-		statusStr = "reAnnotation"
-	case domain.ImgDatasetStatusAnnotationFailed:
-		statusStr = "annotationFailed"
-	case domain.ImgDatasetStatusAnnotationSuccess:
-		statusStr = "annotationSuccess"
 	default:
 		statusStr = "default"
 	}
