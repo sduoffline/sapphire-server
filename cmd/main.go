@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	docs "sapphire-server/cmd/docs"
 	"sapphire-server/internal/conf"
+	"sapphire-server/internal/cron"
 	"sapphire-server/internal/infra"
 	"sapphire-server/internal/middleware"
 	"sapphire-server/internal/router"
@@ -54,6 +55,12 @@ func main() {
 	router.NewDiscussionRouter(engine)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// 启动定时任务
+	cronServ := cron.NewCronService()
+	cronServ.Init()
+	defer cronServ.Stop()
+	cronServ.Start()
 
 	// start http server
 	err = engine.Run(conf.GetServerAddr())
