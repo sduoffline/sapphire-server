@@ -1,7 +1,8 @@
 package dto
 
 type NewDiscussion struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	ReplyID uint   `json:"replyID"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	DatasetID uint   `json:"datasetId"`
+	ReplyID   uint   `json:"replyId"`
 }

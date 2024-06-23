@@ -51,6 +51,7 @@ func main() {
 	router.NewTestRouter(engine)
 	router.NewScoreRouter(engine)
 	router.NewMessageRouter(engine)
+	router.NewDiscussionRouter(engine)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
