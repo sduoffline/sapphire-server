@@ -5,7 +5,22 @@ import (
 )
 
 func Save[T any](data T) error {
-	err := infra.Insert(data)
+	var err error
+	// 根据有无id字段判断是插入还是更新
+	if infra.HasID(data) {
+		err = infra.Update(data)
+	} else {
+		err = infra.Insert(data)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SaveAll[T any](data []T) error {
+	var err error
+	err = infra.InsertMany(data)
 	if err != nil {
 		return err
 	}
@@ -13,6 +28,10 @@ func Save[T any](data T) error {
 }
 
 func Delete[T any](data T) error {
+	err := infra.Delete(data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -44,7 +63,18 @@ func FindPage[T any](page int, pageSize int, conditions ...interface{}) ([]T, er
 	return nil, nil
 }
 
+func Query[T any](sql string, args ...interface{}) ([]T, error) {
+	result, err := infra.Query[T](sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func Modify[T any](data T, column string, value string) error {
-	infra.UpdateSingleColumn(data, column, value)
+	err := infra.UpdateSingleColumn(data, column, value)
+	if err != nil {
+		return err
+	}
 	return nil
 }

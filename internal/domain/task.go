@@ -31,7 +31,10 @@ func (t *Task) CreateTask(job dto.NewJob) {
 	t.OnnxId = job.OnnxId
 	t.Status = READY
 	t.EmbeddingURL = ""
-	dao.Save(t)
+	err := dao.Save(t)
+	if err != nil {
+		return
+	}
 }
 
 // GetLatestTask 获取最新可做的task
@@ -41,4 +44,40 @@ func (t *Task) GetLatestTask() *Task {
 		return nil
 	}
 	return task
+}
+
+// UpdateTaskStatus 更新task状态
+func (t *Task) UpdateTaskStatus(status int) {
+	t.Status = status
+	err := dao.Save(t)
+	if err != nil {
+		return
+	}
+}
+
+// UpdateTaskEmbeddingURL 更新task的embedding url
+func (t *Task) UpdateTaskEmbeddingURL(embeddingURL string) {
+	t.EmbeddingURL = embeddingURL
+	err := dao.Save(t)
+	if err != nil {
+		return
+	}
+}
+
+// GetTaskByID 根据id获取task
+func (t *Task) GetTaskByID(id int) *Task {
+	task, err := dao.First[Task]("id = ?", id)
+	if err != nil {
+		return nil
+	}
+	return task
+}
+
+// GetAllTasks 获取所有task
+func (t *Task) GetAllTasks() []Task {
+	tasks, err := dao.FindAll[Task]()
+	if err != nil {
+		return nil
+	}
+	return tasks
 }

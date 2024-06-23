@@ -1,12 +1,28 @@
 package dto
 
 type NewDataset struct {
-	Name        string `json:"name" binding:"required"`
-	CreatorID   int    `json:"creator_id" binding:"required"`
-	TypeID      int    `json:"type_id" binding:"required"`
-	Description string `json:"description"`
-	Format      string `json:"format"`
-	Size        int    `json:"size"`
-	IsPublic    bool   `json:"is_public"`
-	IsDeleted   bool   `json:"is_deleted"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	EndTime     string   `json:"endTime"`
+	Cover       string   `json:"cover"`
+	Tags        []string `json:"tags"`
+}
+
+type DatasetQuery struct {
+	Myself  bool   `json:"myself"`
+	Owner   bool   `json:"owner"`
+	Keyword string `json:"keyword"`
+	Order   string `json:"order" binding:"omitempty,oneof=time hot size"`
+}
+
+// Order Enums
+const (
+	OrderTime = "time"
+	OrderHot  = "hot"
+	OrderSize = "size"
+)
+
+type AddImage struct {
+	DatasetID uint     `json:"datasetId"`
+	Images    []string `json:"images"`
 }

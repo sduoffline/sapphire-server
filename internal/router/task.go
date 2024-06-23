@@ -6,6 +6,7 @@ import (
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
+	"sapphire-server/internal/middleware"
 	"strconv"
 )
 
@@ -14,7 +15,7 @@ type TaskRouter struct {
 
 func NewTaskRouter(engine *gin.Engine) *TaskRouter {
 	router := &TaskRouter{}
-	taskGroup := engine.Group("/task")
+	taskGroup := engine.Group("/task").Use(middleware.UserIDMiddleware())
 	taskGroup.GET("/list", router.HandleList)
 	taskGroup.GET("/next", router.HandleNext)
 	taskGroup.POST("/create", router.HandleCreate)
@@ -22,11 +23,31 @@ func NewTaskRouter(engine *gin.Engine) *TaskRouter {
 	return router
 }
 
+// HandleList godoc
+//
+//	@Summary		获取任务列表
+//	@Description	获取任务列表
+//	@Tags			task
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	dto.Response{data=[]interface{}}
+//	@Router			/task/list [get]
 func (t *TaskRouter) HandleList(ctx *gin.Context) {
 	tasks, _ := dao.FindAll[domain.Task]()
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(tasks))
 }
 
+// HandleCreate godoc
+//
+//	@Summary		创建任务
+//	@Description	创建任务
+//	@Tags			task
+//	@Accept			json
+//	@Produce		json
+//	@Param			img_url	formData	string	true	"Image URL"
+//	@Param			onnx_id	formData	int		true	"Onnx ID"
+//	@Success		200		{object}	domain.Task
+//	@Router			/task/create [post]
 func (t *TaskRouter) HandleCreate(ctx *gin.Context) {
 	imgUrl := ctx.PostForm("img_url")
 	onnxId := ctx.PostForm("onnx_id")
@@ -44,6 +65,15 @@ func (t *TaskRouter) HandleCreate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, NewTask)
 }
 
+// HandleNext godoc
+//
+//	@Summary		获取下一个任务
+//	@Description	获取下一个任务
+//	@Tags			task
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	domain.Task
+//	@Router			/task/next [get]
 func (t *TaskRouter) HandleNext(ctx *gin.Context) {
 	task := domain.NewTask()
 	nextTask := task.GetLatestTask()
@@ -73,6 +103,9 @@ func (t *TaskRouter) HandleUpdate(ctx *gin.Context) {
 		return
 	}
 	// Update the task status
-	dao.Modify(task, "status", strconv.Itoa(statusInt))
+	err := dao.Modify(task, "status", strconv.Itoa(statusInt))
+	if err != nil {
+		return
+	}
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(task))
 }

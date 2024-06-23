@@ -30,3 +30,5 @@ dev.sh
 go.work
 
 config/*.yml
+
+files/
