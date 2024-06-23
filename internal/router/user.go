@@ -30,6 +30,7 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 	{
 		authGroup.POST("/passwd/change", router.HandleChangePasswd)
 		authGroup.POST("/info/change", router.HandleChangeInfo)
+		authGroup.GET("/rank/list", router.HandleUserRankList)
 	}
 
 	statisticGroup := userGroup.Group("/statistic")
@@ -254,4 +255,15 @@ func (u *UserRouter) HandleChangeInfo(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(user))
+}
+
+// HandleUserRankList godoc
+func (u *UserRouter) HandleUserRankList(ctx *gin.Context) {
+	users, err := userDomain.ListUsersByRank()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(users))
 }
