@@ -501,6 +501,7 @@ func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("invalid dataset id"))
 		return
 	}
+	slog.Info("HandleDownloadDataset", "datasetID", datasetID)
 
 	// 先读出数据集
 	//userID, _ := ctx.Keys["id"].(uint)
@@ -512,6 +513,7 @@ func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
+	slog.Info("HandleDownloadDataset", "url", url)
 
 	// 使用map包装结果
 	res := make(map[string]string)

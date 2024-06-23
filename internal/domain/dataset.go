@@ -1,8 +1,16 @@
 package domain
 
 import (
+	"bytes"
 	"fmt"
 	"gorm.io/gorm"
+	"io"
+	"log/slog"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"regexp"
+	"sapphire-server/internal/conf"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 	"time"
@@ -206,11 +214,107 @@ func (d *Dataset) GetDatasetByID(id uint) (*Dataset, error) {
 // GetResultArchive 获取结果归档
 // TODO: 未实现
 func (d *Dataset) GetResultArchive(id uint) (string, error) {
-	_, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)
+	ann, err := dao.FindAll[Annotation]("dataset_id = ?", id)
+	slog.Info("ann", ann)
 	if err != nil {
 		return "", err
 	}
-	return "", nil
+
+	// 将数据写入一个.txt文件
+	// 保存到本地
+	// 返回文件路径
+	fileName := fmt.Sprintf("result_%d.txt", id)
+	f, err := os.Create(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			slog.Error("close file failed", err)
+		}
+	}(f)
+
+	for _, a := range ann {
+		//_, err := f.WriteString(fmt.Sprintf("%s %s %s\n", a.ImgUrl, a.Label, a.Description))
+		slog.Info("a", a)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// 结束写入
+	err = f.Sync()
+	if err != nil {
+		return "", err
+	}
+
+	// 将文件上传到OSS
+	// 返回文件路径
+	info := conf.GetImgConfig()
+	re := regexp.MustCompile(`svrUrl: (.*?); directUrl: (.*?); auth string: (.*?);`)
+	matches := re.FindStringSubmatch(info)
+	var svrUrl, directUrl, auth string
+	if len(matches) == 4 {
+		svrUrl = matches[1]
+		directUrl = matches[2]
+		auth = matches[3]
+	} else {
+		fmt.Println("String format is not valid.")
+	}
+
+	// 打开文件
+	file, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Failed to close file:", err)
+		}
+	}(file)
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	req, err := http.NewRequest("PUT", svrUrl+fileName, bytes.NewReader(fileBytes))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", auth)
+
+	// 发送请求
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println("Failed to close response body:", err)
+		}
+	}(resp.Body)
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	// 读取响应体
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return directUrl + fileName, nil
 }
 
 // GetDatasetList 获取数据集列表
