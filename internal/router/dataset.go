@@ -21,10 +21,10 @@ type DatasetRouter struct {
 func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 	router := &DatasetRouter{}
 	datasetGroup := engine.Group("/dataset")
-	datasetGroup.GET("/list", router.HandleList)
 
 	authRouter := datasetGroup.Group("/").Use(middleware.AuthMiddleware()).Use(middleware.UserIDMiddleware())
 	{
+		authRouter.GET("/list", router.HandleList)
 		authRouter.GET("/created/list", router.HandleCreatedList)
 		authRouter.GET("/joined/list", router.HandleJoinedList)
 		authRouter.GET("/user/list", router.HandleUserList)
@@ -58,7 +58,9 @@ var datasetService = service.NewDatasetService()
 //	@Success		200	{object}	dto.Response{data=[]domain.Dataset}
 //	@Router			/dataset/list [get]
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
+	// 读取用户ID为str
 	userID := ctx.Keys["id"].(uint)
+	slog.Info("HandleList", "userID", userID)
 
 	datasets := datasetService.GetAllDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
