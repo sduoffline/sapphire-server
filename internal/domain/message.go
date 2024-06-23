@@ -7,6 +7,8 @@ import (
 	"sapphire-server/internal/data/dto"
 )
 
+var messageDomain = NewMessageDomain()
+
 type Message struct {
 	gorm.Model
 	CreatorID  uint
@@ -19,8 +21,8 @@ type Message struct {
 const (
 	// DEFAULT 默认
 	DEFAULT = 0
-	// TREND 动态
-	TREND = 1
+	// MessageTypeTREND 动态
+	MessageTypeTREND = 1
 	// NOTIFICATION 通知
 	NOTIFICATION = 2
 	// SYSTEM 系统消息
@@ -29,6 +31,22 @@ const (
 
 func NewMessageDomain() *Message {
 	return &Message{}
+}
+
+func (m *Message) SendMessage(content, title string, messageType int, receiverID uint) *Message {
+	var err error
+	message := Message{
+		CreatorID:  0,
+		ReceiverID: receiverID,
+		Content:    content,
+		Title:      title,
+		Type:       messageType,
+	}
+	err = dao.Save(&message)
+	if err != nil {
+		return nil
+	}
+	return &message
 }
 
 // CreateMessage 创建消息

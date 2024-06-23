@@ -88,6 +88,11 @@ func (d *Dataset) AddUserToDataset(userID uint, datasetID uint) error {
 	if err != nil {
 		return err
 	}
+
+	// 发送消息
+	content := fmt.Sprintf("您已成功加入数据集 %d", datasetID)
+	messageDomain.SendMessage(content, "加入数据集", MessageTypeTREND, userID)
+
 	return nil
 }
 
@@ -158,6 +163,10 @@ func (d *Dataset) CreateDataset(creatorId uint, dto dto.NewDataset) (*Dataset, e
 	if err != nil {
 		return nil, err
 	}
+
+	// 发送消息
+	content := fmt.Sprintf("您已成功创建数据集 %s", datasetInfo.Name)
+	messageDomain.SendMessage(content, "创建数据集", MessageTypeTREND, creatorId)
 	return datasetInfo, nil
 }
 

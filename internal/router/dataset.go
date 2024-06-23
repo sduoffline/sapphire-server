@@ -198,7 +198,7 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	}
 
 	// 创建数据集
-	dataset, err := domain.NewDatasetDomain().CreateDataset(creatorID, body)
+	dataset, err := datasetDomain.CreateDataset(creatorID, body)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
