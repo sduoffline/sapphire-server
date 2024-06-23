@@ -55,13 +55,16 @@ func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 //	@Success		200		{object}	dto.Response{data=domain.Annotation}
 //	@Router			/annotate/make [post]
 func (a *AnnotationRouter) HandleMake(ctx *gin.Context) {
+	var err error
 	body := dto.NewAnnotation{}
 	if err := ctx.BindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
 	}
 
-	annotation, err := annotationDomain.CreateAnnotation(body)
+	userID := ctx.Keys["id"].(uint)
+
+	annotation, err := annotationDomain.CreateAnnotation(userID, body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
 		return
