@@ -295,3 +295,56 @@ func (u *User) ListUsersByIds(ids []uint) ([]User, error) {
 	}
 	return users, nil
 }
+
+// ListUsersByRank 根据积分排名列出用户
+func (u *User) ListUsersByRank() ([]UserResult, error) {
+	var err error
+	var users []User
+	users, err = dao.FindAll[User]("")
+	if err != nil {
+		return nil, err
+	}
+
+	var userResults []UserResult
+	for _, user := range users {
+		createdDatasets, err := datasetDomain.ListUserCreatedDatasets(user.ID)
+		if err != nil {
+			slog.Error("ListUserCreatedDatasets", err)
+			return nil, err
+		}
+		slog.Info("createdDatasets", createdDatasets)
+
+		joinedDatasets, err := datasetDomain.ListUserJoinedDatasetList(user.ID)
+		if err != nil {
+			slog.Error("ListUserJoinedDatasetList", err)
+			return nil, err
+		}
+		slog.Info("joinedDatasets", joinedDatasets)
+
+		annotations, err := annotationDomain.ListAnnotationsByUserID(user.ID)
+		if err != nil {
+			slog.Error("ListAnnotationsByUserID", err)
+			return nil, err
+		}
+		slog.Info("annotations", annotations)
+
+		res := buildUserResult(&user, len(joinedDatasets), len(createdDatasets), len(annotations))
+		userResults = append(userResults, *res)
+	}
+
+	// 根据score排序
+	for i := 0; i < len(userResults); i++ {
+		for j := i + 1; j < len(userResults); j++ {
+			if userResults[i].Score < userResults[j].Score {
+				userResults[i], userResults[j] = userResults[j], userResults[i]
+			}
+		}
+	}
+
+	// 只返回前 10 个用户
+	if len(userResults) > 10 {
+		userResults = userResults[:10]
+	}
+
+	return userResults, nil
+}
