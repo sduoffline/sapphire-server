@@ -15,7 +15,6 @@ import (
 	"sapphire-server/pkg/misc"
 	"sapphire-server/pkg/util"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -365,7 +364,8 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 
 	// 将文件保存到本地
 	savePath := "./files/" + file.Filename
-	saveDir := strings.Replace(savePath, ".zip", "", 1)
+	saveDir := "./files/"
+	//saveDir := strings.Replace(savePath, ".zip", "", 1)
 	// 检查是否存在该文件
 	if _, err := os.Stat(savePath); err == nil {
 		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse("文件已存在"))
@@ -378,13 +378,13 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	}
 
 	// 结束后删除文件
-	defer func() {
-		err := os.Remove(savePath)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
-			return
-		}
-	}()
+	//defer func() {
+	//	err := os.Remove(savePath)
+	//	if err != nil {
+	//		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+	//		return
+	//	}
+	//}()
 
 	// 解压缩文件
 	// 先将文件读取为[]byte
@@ -410,10 +410,22 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 
 	// 取出该目录下的所有文件
 	files, err := os.ReadDir(saveDir)
+
+	println("files: ", files, saveDir)
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
+
+	// 上传完成后删除文件
+	defer func() {
+		err := os.RemoveAll(saveDir)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+			return
+		}
+	}()
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -424,6 +436,12 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 
 	// 遍历文件，将文件上传到图床
 	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		if filepath.Ext(f.Name()) != ".jpg" {
+			continue
+		}
 		wg.Add(1)
 		go func(f os.DirEntry) {
 			defer wg.Done()
@@ -455,6 +473,7 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	wg.Wait()
 	close(errChan)
 
+	println("touch here")
 	// 检查是否有错误
 	for err := range errChan {
 		if err != nil {
@@ -462,6 +481,7 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 			return
 		}
 	}
+	println("touch here2")
 
 	// 读取数据集
 	dataset, err := datasetDomain.GetDatasetByID(datasetID64)
@@ -469,7 +489,6 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return
 	}
-
 	// 插入数据库
 	err = datasetDomain.AddImageList(dataset, imageUrls)
 	if err != nil {

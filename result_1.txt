@@ -1,0 +1,5 @@
+id: 11, content: [{"center_x":50,"center_y":68,"w":85,"h":73,"id":52}], deliveredCount: 0, qualifiedCount: 0, replicaCount: 0, status: 0, imageUrl: /dataimgs/2330b43dcc6082727c04c72704b2f54e.jpg
+id: 12, content: [{"center_x":50,"center_y":68,"w":85,"h":73,"id":52}], deliveredCount: 0, qualifiedCount: 0, replicaCount: 0, status: 0, imageUrl: /dataimgs/be336c7ca6b8685f615cbbd37d5f82a5.jpg
+id: 13, content: [{"center_x":50,"center_y":68,"w":85,"h":73,"id":52}], deliveredCount: 0, qualifiedCount: 0, replicaCount: 0, status: 0, imageUrl: /dataimgs/be336c7ca6b8685f615cbbd37d5f82a5.jpg
+id: 20, content: [{"center_x":50,"center_y":68,"w":85,"h":73,"id":52}], deliveredCount: 0, qualifiedCount: 0, replicaCount: 0, status: 0, imageUrl: /dataimgs/be336c7ca6b8685f615cbbd37d5f82a5.jpg
+id: 23, content: [{"center_x":0.562,"center_y":0.36720867208672087,"w":0.138,"h":0.23848238482384823,"id":0}], deliveredCount: 0, qualifiedCount: 0, replicaCount: 0, status: 0, imageUrl: /dataimgs/2330b43dcc6082727c04c72704b2f54e.jpg

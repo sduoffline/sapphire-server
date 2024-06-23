@@ -45,7 +45,7 @@ func isIgnoreFile(f *zip.File) bool {
 func writeUnzipFile(f *zip.File, destDir string) error {
 	var err error
 	fName := f.Name
-	destPath := destDir + "/" + fName
+	destPath := destDir + fName
 	println("unzip file: ", fName, " to ", destPath)
 	// 判断文件夹是否存在，主要是处理zip包含多层文件目录的情况
 	//if f.FileInfo().IsDir() && !isFileExist(destPath) {
