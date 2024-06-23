@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+var datasetDomain = NewDatasetDomain()
+
 type Dataset struct {
 	gorm.Model
 	Name        string    `gorm:"column:name"`

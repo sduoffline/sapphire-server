@@ -4,6 +4,8 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log/slog"
+	"math"
 	"regexp"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
@@ -30,8 +32,47 @@ type UserRole struct {
 	RoleName string `gorm:"column:role_name"`
 }
 
-func NewUser() *User {
+type UserResult struct {
+	ID             uint   `json:"id"`
+	Name           string `json:"name"`
+	Email          string `json:"email"`
+	Uid            string `json:"uid"`
+	Description    string `json:"description"`
+	Avatar         string `json:"avatar"`
+	Role           int    `json:"role"`
+	Score          int    `json:"score"`
+	JoinedCount    int    `json:"joinedCount"`
+	CreatedCount   int    `json:"createdCount"`
+	AnnotatedCount int    `json:"annotatedCount"`
+}
+
+func NewUserDomain() *User {
 	return &User{}
+}
+
+func buildUserResult(user *User, joinedCount, createdCount, annotatedCount int) *UserResult {
+	// 使用一个增长越来越缓慢的函数来计算积分
+	createScore := math.Pow(float64(createdCount), 1.1)
+	joinScore := math.Pow(float64(joinedCount), 1.2)
+	annotateScore := math.Pow(float64(annotatedCount), 1.3)
+	slog.Info("createScore", createScore)
+	slog.Info("joinScore", joinScore)
+	slog.Info("annotateScore", annotateScore)
+	totalScore := int(10 * (createScore + joinScore + annotateScore) / 3)
+
+	return &UserResult{
+		ID:             user.ID,
+		Name:           user.Name,
+		Email:          user.Email,
+		Uid:            user.Uid,
+		Description:    user.Description,
+		Avatar:         user.Avatar,
+		Role:           user.Role,
+		Score:          totalScore,
+		JoinedCount:    joinedCount,
+		CreatedCount:   createdCount,
+		AnnotatedCount: annotatedCount,
+	}
 }
 
 func (u *User) Register(register dto.Register) (token string, user *User, err error) {
@@ -132,6 +173,42 @@ func (u *User) GetUserInfo(userId uint) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *User) GetUserDetail(userId uint) (*UserResult, error) {
+	var err error
+	user, err := dao.FindOne[User](userId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	createdDatasets, err := datasetDomain.ListUserCreatedDatasets(userId)
+	if err != nil {
+		slog.Error("ListUserCreatedDatasets", err)
+		return nil, err
+	}
+	slog.Info("createdDatasets", createdDatasets)
+
+	joinedDatasets, err := datasetDomain.ListUserJoinedDatasetList(userId)
+	if err != nil {
+		slog.Error("ListUserJoinedDatasetList", err)
+		return nil, err
+	}
+	slog.Info("joinedDatasets", joinedDatasets)
+
+	annotations, err := annotationDomain.ListAnnotationsByUserID(userId)
+	if err != nil {
+		slog.Error("ListAnnotationsByUserID", err)
+		return nil, err
+	}
+	slog.Info("annotations", annotations)
+
+	res := buildUserResult(user, len(joinedDatasets), len(createdDatasets), len(annotations))
+
+	return res, nil
 }
 
 func (u *User) ChangeInfo(info dto.ChangeUserInfo, userId uint) (user *User, err error) {

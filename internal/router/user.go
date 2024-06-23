@@ -14,7 +14,7 @@ import (
 type UserRouter struct {
 }
 
-var userDomain = domain.NewUser()
+var userDomain = domain.NewUserDomain()
 
 // NewUserRouter 创建用户路由
 func NewUserRouter(engine *gin.Engine) *UserRouter {
@@ -55,7 +55,7 @@ func (u *UserRouter) HandleProfile(ctx *gin.Context) {
 		return
 	}
 
-	user, err := userDomain.GetUserInfo(uint(userId))
+	user, err := userDomain.GetUserDetail(uint(userId))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
 		return

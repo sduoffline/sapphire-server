@@ -32,7 +32,7 @@ func NewDiscussionDomain() *Discussion {
 	return &Discussion{}
 }
 
-var userDomain = NewUser()
+var userDomain = NewUserDomain()
 
 func buildResult(discussion Discussion, user User) *DiscussionResult {
 	timeStr := util.FormatTimeStr(discussion.CreatedAt)

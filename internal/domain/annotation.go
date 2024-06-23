@@ -7,6 +7,8 @@ import (
 	"sapphire-server/internal/data/dto"
 )
 
+var annotationDomain = NewAnnotationDomain()
+
 type Annotation struct {
 	gorm.Model
 	Status         int    `gorm:"column:status"`
@@ -56,4 +58,14 @@ func (a *Annotation) CreateAnnotation(anno dto.NewAnnotation) (*Annotation, erro
 		return nil, err
 	}
 	return annotation, nil
+}
+
+// ListAnnotationsByUserID 根据用户 ID 获取该用户的所有标注
+func (a *Annotation) ListAnnotationsByUserID(userID uint) ([]Annotation, error) {
+	var err error
+	annotations, err := dao.FindAll[Annotation]("user_id = ?", userID)
+	if err != nil {
+		return nil, err
+	}
+	return annotations, nil
 }
