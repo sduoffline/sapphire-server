@@ -46,7 +46,14 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 
 var datasetService = service.NewDatasetService()
 
-// HandleList 获取公开且未删除的数据集
+// HandleList godoc
+// @Summary 获取公开且未删除的数据集
+// @Description 获取公开且未删除的数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.Response{data=[]domain.Dataset}
+// @Router /dataset/list [get]
 func (t *DatasetRouter) HandleList(ctx *gin.Context) {
 	userID := ctx.Keys["id"].(uint)
 
@@ -54,28 +61,57 @@ func (t *DatasetRouter) HandleList(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
-// HandleCreatedList 获取用户创建的数据集
+// HandleCreatedList godoc
+// @Summary 获取用户创建的数据集
+// @Description 获取用户创建的数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.Response{data=[]domain.Dataset}
+// @Router /dataset/created/list [get]
 func (t *DatasetRouter) HandleCreatedList(ctx *gin.Context) {
 	userID := ctx.Keys["id"].(uint)
 	datasets := datasetService.GetUserCreatedDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
-// HandleJoinedList 获取用户加入的数据集
+// HandleJoinedList godoc
+// @Summary 获取用户加入的数据集
+// @Description 获取用户加入的数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.Response{data=[]domain.Dataset}
+// @Router /dataset/joined/list [get]
 func (t *DatasetRouter) HandleJoinedList(ctx *gin.Context) {
 	userID := ctx.Keys["id"].(uint)
 	datasets := datasetService.GetUserJoinedDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
-// HandleUserList 获取用户创建的数据集
+// HandleUserList godoc
+// @Summary 获取用户创建的数据集
+// @Description 获取用户创建的数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.Response{data=[]domain.Dataset}
+// @Router /dataset/user/list [get]
 func (t *DatasetRouter) HandleUserList(ctx *gin.Context) {
 	userID := ctx.Keys["id"].(uint)
 	datasets := datasetService.GetUserDatasetList(userID)
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(datasets))
 }
 
-// HandleJoin 加入数据集
+// HandleJoin godoc
+// @Summary 加入数据集
+// @Description 加入数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response
+// @Router /dataset/join/{id} [post]
 func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
 	var err error
 
@@ -94,7 +130,15 @@ func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
-// HandleQuit 退出数据集
+// HandleQuit godoc
+// @Summary 退出数据集
+// @Description 退出数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response
+// @Router /dataset/quit/{id} [post]
 func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 	var err error
 
@@ -113,7 +157,15 @@ func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
-// HandleCreate 创建数据集
+// HandleCreate godoc
+// @Summary 创建数据集
+// @Description 创建数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param body body dto.NewDataset true "New Dataset"
+// @Success 200 {object} dto.Response{data=domain.Dataset}
+// @Router /dataset/create [post]
 func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	var err error
 	creatorID := ctx.Keys["id"].(uint)
@@ -143,6 +195,16 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
+// HandleUpdate godoc
+// @Summary 更新数据集
+// @Description 更新数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Param body body dto.NewDataset true "New Dataset"
+// @Success 200 {object} dto.Response{data=domain.Dataset}
+// @Router /dataset/update/{id} [put]
 func (t *DatasetRouter) HandleUpdate(ctx *gin.Context) {
 	var err error
 	creatorID := ctx.Keys["id"].(uint)
@@ -171,7 +233,15 @@ func (t *DatasetRouter) HandleUpdate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
-// HandleDelete 删除数据集
+// HandleDelete godoc
+// @Summary 删除数据集
+// @Description 删除数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response
+// @Router /dataset/{id} [delete]
 func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 	var err error
 	datasetID, err := strconv.Atoi(ctx.Param("id"))
@@ -198,7 +268,15 @@ func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
-// ListDatasetJoinedUsers 列出加入数据集的用户
+// ListDatasetJoinedUsers godoc
+// @Summary 列出加入数据集的用户
+// @Description 列出加入数据集的用户
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response{data=[]domain.User}
+// @Router /dataset/joined/users/{id} [get]
 func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
 	var err error
 	datasetID, err := strconv.Atoi(ctx.Param("id"))
@@ -238,7 +316,16 @@ func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
-// HandleUploadImg 上传图片
+// HandleUploadImg godoc
+// @Summary 上传图片
+// @Description 上传图片
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Param file formData file true "File"
+// @Success 200 {object} dto.Response
+// @Router /dataset/upload/{id} [post]
 func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	var err error
 	// 读取dataset id
@@ -337,7 +424,15 @@ func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(nil))
 }
 
-// HandleGetByID 根据 ID 获取数据集
+// HandleGetByID godoc
+// @Summary 获取数据集
+// @Description 根据 ID 获取数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response{data=domain.Dataset}
+// @Router /dataset/{id} [get]
 func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 	var err error
 	datasetID, err := strconv.Atoi(ctx.Param("id"))
@@ -352,7 +447,15 @@ func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(dataset))
 }
 
-// HandleDownloadDataset 下载数据集
+// HandleDownloadDataset godoc
+// @Summary 下载数据集
+// @Description 下载数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param id path int true "Dataset ID"
+// @Success 200 {object} dto.Response{data=map[string]string}
+// @Router /dataset/download/{id} [post]
 func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 	var err error
 	datasetID, err := strconv.Atoi(ctx.Param("id"))
@@ -379,7 +482,15 @@ func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(res))
 }
 
-// HandleQuery 查询数据集
+// HandleQuery godoc
+// @Summary 查询数据集
+// @Description 查询数据集
+// @Tags dataset
+// @Accept json
+// @Produce json
+// @Param body body dto.DatasetQuery true "Dataset Query"
+// @Success 200 {object} dto.Response{data=[]domain.Dataset}
+// @Router /dataset/query [post]
 func (t *DatasetRouter) HandleQuery(ctx *gin.Context) {
 	var err error
 	userID := ctx.Keys["id"].(uint)

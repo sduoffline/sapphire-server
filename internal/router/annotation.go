@@ -22,8 +22,8 @@ var datasetDomain = domain.NewDatasetDomain()
 var annotationDomain = domain.NewAnnotationDomain()
 
 // HandleGetAnnotation godoc
-// @Summary Get images for annotation
-// @Description Get images for annotation
+// @Summary 获取标注图片信息
+// @Description 根据数据集ID获取标注图片信息
 // @Tags annotation
 // @Accept json
 // @Produce json
@@ -42,6 +42,15 @@ func (a *AnnotationRouter) HandleGetAnnotation(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(images))
 }
 
+// HandleMake godoc
+// @Summary 创建标注
+// @Description 创建标注
+// @Tags annotation
+// @Accept json
+// @Produce json
+// @Param body body dto.NewAnnotation true "New Annotation"
+// @Success 200 {object} dto.Response{data=domain.Annotation}
+// @Router /annotate/make [post]
 func (a *AnnotationRouter) HandleMake(ctx *gin.Context) {
 	body := dto.NewAnnotation{}
 	if err := ctx.BindJSON(&body); err != nil {
