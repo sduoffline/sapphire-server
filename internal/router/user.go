@@ -37,14 +37,14 @@ func NewUserRouter(engine *gin.Engine) *UserRouter {
 }
 
 // HandleProfile godoc
-// @Summary 获取用户信息
-// @Description 根据用户 id 获取用户信息
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param userId query string true "User ID"
-// @Success 200 {object} dto.Response{data=domain.User}
-// @Router /user/profile [get]
+//	@Summary		获取用户信息
+//	@Description	根据用户 id 获取用户信息
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	query		string	true	"User ID"
+//	@Success		200		{object}	dto.Response{data=domain.User}
+//	@Router			/user/profile [get]
 func (u *UserRouter) HandleProfile(ctx *gin.Context) {
 	userId := ctx.Query("userId")
 	user, err := dao.First[domain.User]("id = ?", userId)
@@ -59,14 +59,14 @@ func (u *UserRouter) HandleProfile(ctx *gin.Context) {
 }
 
 // HandleRegister godoc
-// @Summary 注册
-// @Description 用户注册
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param body body dto.Register true "Register"
-// @Success 200 {object} dto.Response{data=map[string]interface{}}
-// @Router /user/register [post]
+//	@Summary		注册
+//	@Description	用户注册
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.Register	true	"Register"
+//	@Success		200		{object}	dto.Response{data=map[string]interface{}}
+//	@Router			/user/register [post]
 func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 	// 提取请求体到 Register 结构体
 	body := dto.Register{}
@@ -93,14 +93,14 @@ func (u *UserRouter) HandleRegister(ctx *gin.Context) {
 }
 
 // HandleLogin godoc
-// @Summary 登录
-// @Description 用户登录
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param body body dto.Login true "Login"
-// @Success 200 {object} dto.Response{data=map[string]interface{}}
-// @Router /user/login [post]
+//	@Summary		登录
+//	@Description	用户登录
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.Login	true	"Login"
+//	@Success		200		{object}	dto.Response{data=map[string]interface{}}
+//	@Router			/user/login [post]
 func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 	// 提取请求体到 Register 结构体
 	body := &dto.Login{}
@@ -129,15 +129,15 @@ func (u *UserRouter) HandleLogin(ctx *gin.Context) {
 }
 
 // HandleChangeRole godoc
-// @Summary 修改用户角色
-// @Description 根据用户 id 更改权限
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param userId query string true "User ID"
-// @Param role formData string true "Role"
-// @Success 200 {object} dto.Response{data=domain.User}
-// @Router /user/change-role [post]
+//	@Summary		修改用户角色
+//	@Description	根据用户 id 更改权限
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	query		string	true	"User ID"
+//	@Param			role	formData	string	true	"Role"
+//	@Success		200		{object}	dto.Response{data=domain.User}
+//	@Router			/user/change-role [post]
 func (u *UserRouter) HandleChangeRole(ctx *gin.Context) {
 	userId := ctx.Query("userId")
 	role := ctx.PostForm("role")
@@ -165,14 +165,14 @@ func (u *UserRouter) HandleChangeRole(ctx *gin.Context) {
 }
 
 // HandleCredit godoc
-// @Summary 获取用户积分
-// @Description 根据用户 id 获取用户积分
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param userId query string true "User ID"
-// @Success 200 {object} dto.Response{data=uint}
-// @Router /user/statistic/credit [get]
+//	@Summary		获取用户积分
+//	@Description	根据用户 id 获取用户积分
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	query		string	true	"User ID"
+//	@Success		200		{object}	dto.Response{data=uint}
+//	@Router			/user/statistic/credit [get]
 func (u *UserRouter) HandleCredit(ctx *gin.Context) {
 	userId := ctx.Query("userId")
 	user, err := dao.First[domain.User]("id = ?", userId)
@@ -187,14 +187,14 @@ func (u *UserRouter) HandleCredit(ctx *gin.Context) {
 }
 
 // HandleChangePasswd godoc
-// @Summary 修改密码
-// @Description 修改密码
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param body body dto.ChangePasswd true "Change Password"
-// @Success 200 {object} dto.Response{data=interface{}}
-// @Router /user/passwd/change [post]
+//	@Summary		修改密码
+//	@Description	修改密码
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.ChangePasswd	true	"Change Password"
+//	@Success		200		{object}	dto.Response{data=interface{}}
+//	@Router			/user/passwd/change [post]
 func (u *UserRouter) HandleChangePasswd(ctx *gin.Context) {
 	// 提取请求体到 Register 结构体
 	var err error
@@ -215,14 +215,14 @@ func (u *UserRouter) HandleChangePasswd(ctx *gin.Context) {
 }
 
 // HandleChangeInfo godoc
-// @Summary 修改用户信息
-// @Description 修改用户信息
-// @Tags user
-// @Accept json
-// @Produce json
-// @Param body body dto.ChangeUserInfo true "Change User Info"
-// @Success 200 {object} dto.Response{data=domain.User}
-// @Router /user/info/change [post]
+//	@Summary		修改用户信息
+//	@Description	修改用户信息
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.ChangeUserInfo	true	"Change User Info"
+//	@Success		200		{object}	dto.Response{data=domain.User}
+//	@Router			/user/info/change [post]
 func (u *UserRouter) HandleChangeInfo(ctx *gin.Context) {
 	var err error
 	userId := ctx.Keys["id"].(uint)
