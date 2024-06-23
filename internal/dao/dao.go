@@ -18,6 +18,15 @@ func Save[T any](data T) error {
 	return nil
 }
 
+func SaveAll[T any](data []T) error {
+	var err error
+	err = infra.InsertMany(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func Delete[T any](data T) error {
 	err := infra.Delete(data)
 	if err != nil {

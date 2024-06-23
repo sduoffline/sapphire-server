@@ -13,6 +13,7 @@ func UserIDMiddleware() gin.HandlerFunc {
 		// 如果没有自定义的Header，直接跳过
 		if customUserHeader == "" {
 			c.Next()
+			return
 		}
 
 		userIDStr := strings.Split(customUserHeader, " ")[1]

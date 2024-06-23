@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"log/slog"
 	"net/http"
 	"os"
 	"sapphire-server/internal/dao"
@@ -34,6 +35,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 		authRouter.POST("/create", router.HandleCreate)
 		authRouter.PUT("/update/:id", router.HandleUpdate)
 		authRouter.POST("/upload/:id", router.HandleUploadImg)
+		authRouter.POST("/upload/images", router.HandleAddImagesToDataset)
 		authRouter.POST("/download/:id", router.HandleDownloadDataset)
 		authRouter.DELETE("/:id", router.HandleDelete)
 		//authRouter.POST("/register", router.HandleRegister)
@@ -47,6 +49,7 @@ func NewDatasetRouter(engine *gin.Engine) *DatasetRouter {
 var datasetService = service.NewDatasetService()
 
 // HandleList godoc
+//
 //	@Summary		获取公开且未删除的数据集
 //	@Description	获取公开且未删除的数据集
 //	@Tags			dataset
@@ -62,6 +65,7 @@ func (t *DatasetRouter) HandleList(ctx *gin.Context) {
 }
 
 // HandleCreatedList godoc
+//
 //	@Summary		获取用户创建的数据集
 //	@Description	获取用户创建的数据集
 //	@Tags			dataset
@@ -76,6 +80,7 @@ func (t *DatasetRouter) HandleCreatedList(ctx *gin.Context) {
 }
 
 // HandleJoinedList godoc
+//
 //	@Summary		获取用户加入的数据集
 //	@Description	获取用户加入的数据集
 //	@Tags			dataset
@@ -90,6 +95,7 @@ func (t *DatasetRouter) HandleJoinedList(ctx *gin.Context) {
 }
 
 // HandleUserList godoc
+//
 //	@Summary		获取用户创建的数据集
 //	@Description	获取用户创建的数据集
 //	@Tags			dataset
@@ -104,6 +110,7 @@ func (t *DatasetRouter) HandleUserList(ctx *gin.Context) {
 }
 
 // HandleJoin godoc
+//
 //	@Summary		加入数据集
 //	@Description	加入数据集
 //	@Tags			dataset
@@ -131,6 +138,7 @@ func (t *DatasetRouter) HandleJoin(ctx *gin.Context) {
 }
 
 // HandleQuit godoc
+//
 //	@Summary		退出数据集
 //	@Description	退出数据集
 //	@Tags			dataset
@@ -158,6 +166,7 @@ func (t *DatasetRouter) HandleQuit(ctx *gin.Context) {
 }
 
 // HandleCreate godoc
+//
 //	@Summary		创建数据集
 //	@Description	创建数据集
 //	@Tags			dataset
@@ -196,6 +205,7 @@ func (t *DatasetRouter) HandleCreate(ctx *gin.Context) {
 }
 
 // HandleUpdate godoc
+//
 //	@Summary		更新数据集
 //	@Description	更新数据集
 //	@Tags			dataset
@@ -234,6 +244,7 @@ func (t *DatasetRouter) HandleUpdate(ctx *gin.Context) {
 }
 
 // HandleDelete godoc
+//
 //	@Summary		删除数据集
 //	@Description	删除数据集
 //	@Tags			dataset
@@ -269,6 +280,7 @@ func (t *DatasetRouter) HandleDelete(ctx *gin.Context) {
 }
 
 // ListDatasetJoinedUsers godoc
+//
 //	@Summary		列出加入数据集的用户
 //	@Description	列出加入数据集的用户
 //	@Tags			dataset
@@ -317,6 +329,7 @@ func (t *DatasetRouter) ListDatasetJoinedUsers(ctx *gin.Context) {
 }
 
 // HandleUploadImg godoc
+//
 //	@Summary		上传图片
 //	@Description	上传图片
 //	@Tags			dataset
@@ -410,6 +423,29 @@ func (t *DatasetRouter) HandleUploadImg(ctx *gin.Context) {
 	return
 }
 
+func (t *DatasetRouter) HandleAddImagesToDataset(ctx *gin.Context) {
+	var err error
+
+	userID := ctx.Keys["id"].(uint)
+	body := dto.AddImage{}
+	if err = ctx.BindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.NewFailResponse(err.Error()))
+		return
+	}
+	slog.Info("AddImagesToDataset", "body", body)
+
+	err = datasetService.AddImagesByDataset(body, userID)
+	if err != nil {
+		slog.Error("AddImagesToDataset", "err", err)
+		ctx.JSON(http.StatusInternalServerError, dto.NewFailResponse(err.Error()))
+		return
+	}
+
+	result := datasetService.GetDatasetDetail(userID, body.DatasetID)
+
+	ctx.JSON(http.StatusOK, dto.NewSuccessResponse(result))
+}
+
 // Deprecated: HandleRegister 注册图片
 func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 	imgUrl := ctx.PostForm("img_url")
@@ -425,6 +461,7 @@ func (t *DatasetRouter) HandleRegister(ctx *gin.Context) {
 }
 
 // HandleGetByID godoc
+//
 //	@Summary		获取数据集
 //	@Description	根据 ID 获取数据集
 //	@Tags			dataset
@@ -448,6 +485,7 @@ func (t *DatasetRouter) HandleGetByID(ctx *gin.Context) {
 }
 
 // HandleDownloadDataset godoc
+//
 //	@Summary		下载数据集
 //	@Description	下载数据集
 //	@Tags			dataset
@@ -483,6 +521,7 @@ func (t *DatasetRouter) HandleDownloadDataset(ctx *gin.Context) {
 }
 
 // HandleQuery godoc
+//
 //	@Summary		查询数据集
 //	@Description	查询数据集
 //	@Tags			dataset

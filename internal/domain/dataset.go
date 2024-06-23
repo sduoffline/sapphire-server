@@ -274,6 +274,28 @@ func (d *Dataset) RegisterImage(imgUrl string, datasetID uint) {
 	}
 }
 
+// AddImageList 添加图片列表
+func (d *Dataset) AddImageList(dataset *Dataset, images []string) error {
+	var err error
+
+	var imageList []ImgDataset
+	for _, img := range images {
+		image := ImgDataset{
+			ImgUrl:    img,
+			DatasetId: dataset.ID,
+		}
+		imageList = append(imageList, image)
+	}
+
+	println("imageList", imageList)
+	err = dao.SaveAll[ImgDataset](imageList)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetDatasetDataList 获取数据集数据列表
 func (d *Dataset) GetDatasetDataList(id uint) ([]ImgDataset, error) {
 	res, err := dao.FindAll[ImgDataset]("dataset_id = ?", id)

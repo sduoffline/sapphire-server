@@ -21,3 +21,8 @@ const (
 	OrderHot  = "hot"
 	OrderSize = "size"
 )
+
+type AddImage struct {
+	DatasetID uint     `json:"datasetId"`
+	Images    []string `json:"images"`
+}

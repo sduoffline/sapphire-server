@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log/slog"
 	"sapphire-server/internal/data/dto"
 	"sapphire-server/internal/domain"
 	"sort"
@@ -286,6 +287,38 @@ func (s *DatasetService) buildResultList(datasets []domain.Dataset, isOwner bool
 		results = append(results, result)
 	}
 	return results
+}
+
+// AddImagesByDataset 添加图片到数据集
+func (s *DatasetService) AddImagesByDataset(dto dto.AddImage, userID uint) error {
+	var err error
+
+	datasetId := dto.DatasetID
+	images := dto.Images
+	slog.Info("AddImagesByDataset", datasetId, images)
+
+	// 获取数据集
+	dataset, err := datasetDomain.GetDatasetByID(datasetId)
+	if err != nil {
+		return err
+	}
+	if dataset == nil {
+		slog.Warn("AddImagesByDataset", "dataset not found")
+		return nil
+	}
+	slog.Info("AddImagesByDataset", dataset)
+
+	// 判断用户是否有权限添加图片
+	if dataset.CreatorID != userID {
+		slog.Warn("AddImagesByDataset", "user has no permission")
+	}
+
+	err = datasetDomain.AddImageList(dataset, images)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 将 domain.Dataset 转换为 DatasetResult，包含数据集的数据
