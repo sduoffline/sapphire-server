@@ -2,6 +2,7 @@ package domain
 
 import (
 	"gorm.io/gorm"
+	"log/slog"
 	"sapphire-server/internal/dao"
 	"sapphire-server/internal/data/dto"
 )
@@ -43,6 +44,8 @@ func (t *Task) GetLatestTask() *Task {
 	if err != nil {
 		return nil
 	}
+	slog.Debug("task", task)
+
 	return task
 }
 
@@ -79,5 +82,7 @@ func (t *Task) GetAllTasks() []Task {
 	if err != nil {
 		return nil
 	}
+	slog.Debug("tasks", tasks)
+
 	return tasks
 }
