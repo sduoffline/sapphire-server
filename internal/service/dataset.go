@@ -147,12 +147,19 @@ func (s *DatasetService) GetAllDatasetList(userID uint) []*DatasetResult {
 	for _, dataset := range userJoinedDatasets {
 		userJoinedMap[int(dataset.ID)] = true
 	}
+	//isOwner := dataset.CreatorID == userId
+	//isClaim := datasetDomain.IsUserClaimDataset(userId, id)
+	//result := NewDatasetResult(dataset, isOwner, isClaim)
+	//result.Datas = make([]DatasetItem, 0)
+	//for _, data := range datas {
+	//	result.Datas = append(result.Datas, newDatasetItem(&data))
+	//}
 
 	// 构建结果列表
 	results := make([]*DatasetResult, 0)
 	for _, dataset := range datasets {
-		isOwner := userCreatedMap[int(dataset.ID)]
-		isClaim := userJoinedMap[int(dataset.ID)]
+		isOwner := dataset.CreatorID == userID
+		isClaim := datasetDomain.IsUserClaimDataset(userID, dataset.ID)
 		result := NewDatasetResult(&dataset, isOwner, isClaim)
 		results = append(results, result)
 	}
